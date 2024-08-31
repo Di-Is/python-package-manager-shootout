@@ -14,8 +14,31 @@ github-workflow: .github/workflows/benchmark.yml
 PACKAGE := goodconf
 
 .PHONY: pip-clean
-pip-clean:
+
+TOOLS := "$(TOOLS) pip"
+.PHONY: pip-tooling pip-import pip-clean-cache pip-clean-venv pip-clean-lock pip-lock pip-install pip-add-package pip-version
+pip-tooling:
+	echo
+pip-import:
+	cat requirements.txt
+pip-clean-cache: pip-clean
 	rm -rf ~/.cache/pip
+pip-clean-venv:
+	rm -rf pip/.venv
+pip-clean-lock:
+	echo
+pip-lock:
+	echo
+pip-install:
+	test -f pip/.venv/bin/python || python3 -m venv --upgrade-deps pip/.venv
+	test -f pip/.venv/bin/wheel || pip/.venv/bin/python -m pip install -U wheel
+	pip/.venv/bin/pip install -r requirements.txt
+pip-update:
+	echo
+pip-add-package:
+	echo
+pip-version:
+	@pip --version | awk '{print $$3}'
 
 TOOLS := poetry
 .PHONY: poetry-tooling poetry-import poetry-clean-cache poetry-clean-venv poetry-clean-lock poetry-lock poetry-install poetry-add-package poetry-version
@@ -138,6 +161,33 @@ uv-update:
 uv-add-package:
 	cd uv; uv add $(PACKAGE)
 uv-version:
+	@uv --version | awk '{print $$2}'
+
+TOOLS := "$(TOOLS) uv-old"
+.PHONY: uv-old-tooling uv-old-import uv-old-clean-cache uv-old-clean-venv uv-old-clean-lock uv-old-lock uv-old-install uv-old-add-package uv-old-version
+uv-old-tooling:
+	pip install --user uv
+uv-old-import:
+	cat requirements.txt
+uv-old-clean-cache:
+	rm -rf ~/.cache/uv
+uv-old-clean-venv:
+	rm -rf uv-old/.venv
+uv-old-clean-lock:
+	rm -f uv-old/requirements.txt
+uv-old-lock:
+	mkdir -p uv-old
+	uv pip compile --generate-hashes --output-file=uv-old/requirements.txt requirements.txt
+uv-old-install:
+	test -f uv-old/.venv/bin/python || uv venv uv-old/.venv
+	VIRTUAL_ENV=$$(pwd)/uv-old/.venv uv pip sync uv-old/requirements.txt
+uv-old-update:
+	uv pip compile --output-file=uv-old/requirements.txt requirements.txt
+	VIRTUAL_ENV=$$(pwd)/uv-old/.venv uv pip sync uv-old/requirements.txt
+uv-old-add-package:
+	echo $(PACKAGE) >> requirements.txt
+	$(MAKE) uv-old-lock uv-old-install
+uv-old-version:
 	@uv --version | awk '{print $$2}'
 
 .PHONY: tools
