@@ -168,7 +168,7 @@ TOOLS := "$(TOOLS) uv-old"
 uv-old-tooling:
 	pip install --user uv
 uv-old-import:
-	cat requirements.txt
+	cd uv-old; uv venv
 uv-old-clean-cache:
 	rm -rf ~/.cache/uv
 uv-old-clean-venv:
