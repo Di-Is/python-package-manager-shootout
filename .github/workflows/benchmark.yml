@@ -579,6 +579,19 @@ jobs:
           /usr/bin/time --output=timings/install-warm.txt --format="%e,%S,%U,%P,%M,%I,%O" \
             make uv-old-install
 
+      - name: install & lock cold
+        run: |
+          make uv-old-clean-cache
+          make uv-old-clean-venv
+          /usr/bin/time --output=timings/install-lock-cold.txt --format="%e,%S,%U,%P,%M,%I,%O" \
+            make uv-old-install-lock
+
+      - name: install & lock warm
+        run: |
+          make uv-old-clean-venv
+          /usr/bin/time --output=timings/install-lock-warm.txt --format="%e,%S,%U,%P,%M,%I,%O" \
+            make uv-old-install-lock
+      
       - name: update cold
         run: |
           make uv-old-clean-cache
@@ -602,7 +615,7 @@ jobs:
           TIMESTAMP=$(date +%s)
           mkdir -p "uv-old"
           echo "tool,version,timestamp,stat,elapsed time,system,user,cpu percent,max rss,inputs,outputs" > "$CSV"
-          for stat in "tooling" "import" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
+          for stat in "tooling" "import" "lock-cold" "lock-warm" "install-cold" "install-warm" "install-lock-cold" "install-lock-warm" "update-cold" "update-warm" "add-package"; do
             echo "uv-old,$VERSION,$TIMESTAMP,$stat,$(cat timings/$stat.txt | tr -d '%')" >> "$CSV"
           done
           csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
