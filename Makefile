@@ -179,6 +179,7 @@ uv-old-lock:
 	cd uv-old; uv pip compile --generate-hashes --output-file=requirements.txt ../requirements.txt
 uv-old-install:
 	cd uv-old; uv venv
+	cd uv-old; cat requirements.txt
 	cd uv-old; uv pip sync requirements.txt
 uv-old-update:
 	cd uv-old; uv pip compile --output-file=requirements.txt ../requirements.txt
