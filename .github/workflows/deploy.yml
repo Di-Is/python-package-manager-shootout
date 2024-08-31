@@ -7,7 +7,7 @@ on:
   # trigger after a scheduled run of the benchmarks
   workflow_run:
     workflows: [benchmark]
-    branches: [main]
+    branches: [modify]
     types: [completed]
 jobs:
   deploy:
