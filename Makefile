@@ -38,7 +38,7 @@ pip-update:
 pip-add-package:
 	echo
 pip-version:
-	@pip --version | awk '{print $$3}'
+	@pip --version | awk '{print $$2}'
 
 TOOLS := poetry
 .PHONY: poetry-tooling poetry-import poetry-clean-cache poetry-clean-venv poetry-clean-lock poetry-lock poetry-install poetry-add-package poetry-version
