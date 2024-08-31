@@ -54,7 +54,7 @@ poetry-clean-venv:
 poetry-clean-lock:
 	rm -f poetry/poetry.lock
 poetry-lock:
-	cd poetry; poetry lock --no-update
+	cd poetry; poetry lock
 poetry-install:
 	cd poetry; poetry install
 poetry-update:
