@@ -570,12 +570,14 @@ jobs:
         run: |
           make uv-old-clean-cache
           make uv-old-clean-venv
+          make uv-old-lock
           /usr/bin/time --output=timings/install-cold.txt --format="%e,%S,%U,%P,%M,%I,%O" \
             make uv-old-install
 
       - name: install warm
         run: |
           make uv-old-clean-venv
+          make uv-old-lock
           /usr/bin/time --output=timings/install-warm.txt --format="%e,%S,%U,%P,%M,%I,%O" \
             make uv-old-install
 
