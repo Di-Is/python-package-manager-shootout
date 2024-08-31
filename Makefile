@@ -176,17 +176,16 @@ uv-old-clean-venv:
 uv-old-clean-lock:
 	rm -f uv-old/requirements.txt
 uv-old-lock:
-	mkdir -p uv-old
-	uv pip compile --generate-hashes --output-file=uv-old/requirements.txt requirements.txt
+	cd uv-old; uv pip compile --generate-hashes --output-file=requirements.txt ../requirements.txt
 uv-old-install:
-	test -f uv-old/.venv/bin/python || uv venv uv-old/.venv
-	VIRTUAL_ENV=$$(pwd)/uv-old/.venv uv pip sync uv-old/requirements.txt
+	cd uv-old; uv venv
+	uv pip sync requirements.txt
 uv-old-update:
-	uv pip compile --output-file=uv-old/requirements.txt requirements.txt
-	VIRTUAL_ENV=$$(pwd)/uv-old/.venv uv pip sync uv-old/requirements.txt
+	cd uv-old; uv pip compile --output-file=requirements.txt ../requirements.txt
+	uv pip sync requirements.txt
 uv-old-install-lock:
-	test -f uv-old/.venv/bin/python || uv venv uv-old/.venv
-	VIRTUAL_ENV=$$(pwd)/uv-old/.venv uv pip install -r uv-old/requirements.txt
+	cd uv-old; uv venv
+	uv pip install -r requirements.txt
 uv-old-add-package:
 	echo $(PACKAGE) >> requirements.txt
 	$(MAKE) uv-old-lock uv-old-install
