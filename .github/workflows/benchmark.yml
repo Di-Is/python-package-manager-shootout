@@ -528,6 +528,8 @@ jobs:
     
   uv-old:
     runs-on: ubuntu-22.04
+    env:
+      UV_PYTHON_PREFERENCE: only-system
     steps:
       - name: Checkout
         uses: actions/checkout@v4
