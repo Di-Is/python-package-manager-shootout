@@ -271,7 +271,7 @@ jobs:
           hyperfine --runs 5 --export-csv ../timings/add-package.csv \
             --show-output \
             --setup 'uv cache clean && cp uv.lock uv.lock.bak && cp pyproject.toml pyproject.toml.bak' \
-            --prepare 'uv sync --no-cache' \
+            --prepare 'uv sync' \
             --conclude 'rm -r .venv && cp uv.lock.bak uv.lock && cp pyproject.toml.bak pyproject.toml' \
             'uv add ${ADD_PACKAGE} --no-cache'
 
@@ -281,7 +281,7 @@ jobs:
           CSV=uv/stats.csv
           TIMESTAMP=$(date +%s)
           mkdir -p "uv"
-          echo "tool,version,mean,median,stddiv,min,max" > "$CSV"
+          echo "tool,version,mean,stat,median,stddiv,min,max" > "$CSV"
           for stat in "tooling" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
             # Extract the necessary fields from the timings CSV
             mean=$(awk -F',' 'NR==2 {print $2}' timings/$stat.csv)
@@ -291,7 +291,7 @@ jobs:
             max=$(awk -F',' 'NR==2 {print $8}' timings/$stat.csv)
             
             # Append the formatted data to the stats CSV
-            echo "uv,$VERSION,$mean,$median,$stddiv,$min,$max" >> "$CSV"
+            echo "uv,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
           done
           csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
 
