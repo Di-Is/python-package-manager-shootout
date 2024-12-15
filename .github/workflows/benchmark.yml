@@ -7,6 +7,7 @@ on:
 
 env:
   ADD_PACKAGE: goodconf
+  UV_SYSTEM_PYTHON: "1"
 
 jobs:
   poetry:
@@ -21,13 +22,24 @@ jobs:
         with:
           python-version: "3.9"
 
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
       - name: setup
         run: ./bin/actions_prereqs.sh
 
       - name: tooling
         run: |
-          /usr/bin/time --output=timings/tooling.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make poetry-tooling
+          cd poetry
+          hyperfine --runs 5 --export-csv ../timings/tooling.csv \
+            --show-output \
+            --conclude 'uv pip uninstall poetry' \
+            'uv pip install --no-cache poetry'
+
+      - name: install poetry
+        run: uv install portry
 
       - name: import
         run: |
@@ -108,6 +120,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.9"
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
 
       - name: setup
         run: ./bin/actions_prereqs.sh
@@ -200,8 +217,10 @@ jobs:
       - name: setup
         run: ./bin/actions_prereqs.sh
       
-      - name: install tool
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
 
       - name: tooling
         run: |
