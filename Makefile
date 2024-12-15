@@ -2,7 +2,7 @@ SHELL=/bin/bash -eu -o pipefail
 
 
 requirements.txt:
-	curl -sL $@ https://raw.githubusercontent.com/getsentry/sentry/51281a6abd8ff4a93d2cebc04e1d5fc7aa9c4c11/requirements-base.txt | grep -v -- --index-url > $@
+	echo "apache-airflow[all]" > $@
 
 .github/workflows/benchmark.yml: Makefile bin/build_workflow.sh templates/workflow_start.yml templates/workflow_tool.yml templates/workflow_end.yml
 	./bin/build_workflow.sh > $@
