@@ -260,7 +260,7 @@ jobs:
       - name: update warm
         run: |
           cd uv
-          hyperfine --runs 5 --warmup 1 --export-csv ../timings/update-cold.csv \
+          hyperfine --runs 5 --warmup 1 --export-csv ../timings/update-warm.csv \
             --show-output \
             --setup 'uv cache clean' \
             'uv sync --upgrade'
