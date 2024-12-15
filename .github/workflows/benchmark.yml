@@ -194,7 +194,7 @@ jobs:
 
       - name: tooling
         run: |
-          hyperfine --runs 10 --export-csv timings/tooling.csv --cleanup 'pip uninstall uv' 'pip install --user --no-cache-dir uv' 
+          hyperfine --runs 10 --export-csv timings/tooling.csv --cleanup 'pip uninstall --user uv' 'pip install --user --no-cache-dir uv' 
 
       - name: import
         run: |
