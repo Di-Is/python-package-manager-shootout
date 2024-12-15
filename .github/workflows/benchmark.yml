@@ -5,9 +5,6 @@ name: benchmark
 on:
   push:
 
-env:
-  UV_SYSTEM_PYTHON: "1"
-
 jobs:
   poetry:
     runs-on: ubuntu-22.04
