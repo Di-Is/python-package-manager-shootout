@@ -270,9 +270,9 @@ jobs:
           cd uv
           hyperfine --runs 5 --export-csv ../timings/add-package.csv \
             --show-output \
-            --setup 'uv cache clean' \
+            --setup 'uv cache clean && cp uv.lock uv.lock.bak && cp pyproject.toml pyproject.toml.bak' \
             --prepare 'uv sync --no-cache' \
-            --conclude 'uv remove ${ADD_PACKAGE} && rm -r .venv uv.lock' \
+            --conclude 'rm -r .venv && cp uv.lock.bak uv.lock && cp pyproject.toml.bak pyproject.toml' \
             'uv add ${ADD_PACKAGE} --no-cache'
 
       - name: stats
@@ -282,7 +282,7 @@ jobs:
           TIMESTAMP=$(date +%s)
           mkdir -p "uv"
           echo "tool,version,mean,median,stddiv,min,max" > "$CSV"
-          for stat in "tooling" "import" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
+          for stat in "tooling" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
             # Extract the necessary fields from the timings CSV
             mean=$(awk -F',' 'NR==2 {print $2}' timings/$stat.csv)
             median=$(awk -F',' 'NR==2 {print $4}' timings/$stat.csv)
