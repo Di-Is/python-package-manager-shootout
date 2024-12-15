@@ -11,6 +11,8 @@ env:
 jobs:
   poetry:
     runs-on: ubuntu-22.04
+    env:
+      PDM_RESOLVE_MAX_ROUNDS: 100
 
     steps:
       - name: Checkout
