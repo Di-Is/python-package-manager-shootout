@@ -194,8 +194,7 @@ jobs:
 
       - name: tooling
         run: |
-          /usr/bin/time --output=timings/tooling.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make uv-tooling
+          hyperfine --runs 5 --warmup 1 --export-csv timings/tooling.txt 'make uv-tooling'
 
       - name: import
         run: |

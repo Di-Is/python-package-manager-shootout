@@ -3,7 +3,7 @@ set -euf -o pipefail
 
 # sentry dependencies
 sudo apt-get update -qq
-sudo apt-get install -y libxmlsec1-dev librdkafka-dev
+sudo apt-get install -y libxmlsec1-dev librdkafka-dev hyperfine
 # benchmark setup
 pip --disable-pip-version-check --no-cache-dir install csv2md
 mkdir -p timings
