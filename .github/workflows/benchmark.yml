@@ -208,7 +208,7 @@ jobs:
       - name: import
         run: |
           cd uv
-          uv add --frozen -r ../requirements.txt'
+          uv add --frozen -r ../requirements.txt
 
       - name: lock cold
         run: |
