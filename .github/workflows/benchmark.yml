@@ -45,21 +45,25 @@ jobs:
       - name: import
         run: |
           cd poetry  
-          poetry add --allow-prereleases $$(sed -e 's/#.*//' -e '/^$$/ d' < ../requirements.txt)
+          poetry add --allow-prereleases $(sed -e 's/#.*//' -e '/^$$/ d' < ../requirements.txt)
 
       - name: lock cold
         run: |
-          make poetry-clean-cache
-          make poetry-clean-venv
-          make poetry-clean-lock
-          /usr/bin/time --output=timings/lock-cold.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make poetry-lock
-
+            cd poetry
+            hyperfine --runs 5 --export-csv ../timings/lock-cold.csv \
+              --show-output \
+              --setup 'rm -rf ~/.cache/pypoetry' \
+              --conclude 'rm poetry.lock && poetry env remove --all || true' \
+              'portry lock --no-cache'
+    
       - name: lock warm
         run: |
-          make poetry-clean-lock
-          /usr/bin/time --output=timings/lock-warm.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make poetry-lock
+          cd uv
+          hyperfine --runs 5 --warmup 1 --export-csv ../timings/lock-warm.csv \
+            --show-output \
+            --setup 'rm -rf ~/.cache/pypoetry' \
+            --conclude 'rm poetry.lock && poetry env remove --all || true' \
+            'portry lock'
 
       - name: install cold
         run: |
