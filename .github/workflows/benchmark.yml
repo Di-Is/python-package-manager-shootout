@@ -207,20 +207,17 @@ jobs:
 
       - name: import
         run: |
-          hyperfine --runs 5 --export-csv timings/tooling.csv \
-            --show-output \
-            --prepare 'uv venv' \
-            --conclude 'rm -r .venv' \
-            'uv pip install --no-cache uv' 
+          cd uv
+          uv add --frozen -r ../requirements.txt'
 
       - name: lock cold
         run: |
-          make uv-clean-cache
-          make uv-clean-venv
-          make uv-clean-lock
-          /usr/bin/time --output=timings/lock-cold.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make uv-lock
-
+          cd uv
+          hyperfine --runs 5 --export-csv timings/lock-cold.csv \
+            --show-output \
+            --conclude 'rm -r .venv uv.lock' \
+            'uv lock --no-cache'
+  
       - name: lock warm
         run: |
           make uv-clean-lock
