@@ -90,33 +90,6 @@ pipenv-version:
 	@pipenv --version | awk '{print $$3}'
 
 
-TOOLS := "$(TOOLS) pip-tools"
-.PHONY: pip-tools-tooling pip-tools-import pip-tools-clean-cache pip-tools-clean-venv pip-tools-clean-lock pip-tools-lock pip-tools-install pip-tools-add-package pip-tools-version
-pip-tools-tooling:
-	pip install --user pip-tools
-pip-tools-import:
-	cat requirements.txt
-pip-tools-clean-cache: pip-clean
-	rm -rf ~/.cache/pip-tools
-pip-tools-clean-venv:
-	rm -rf pip-tools/.venv
-pip-tools-clean-lock:
-	rm -f pip-tools/requirements.txt
-pip-tools-lock:
-	pip-compile --generate-hashes --resolver=backtracking --output-file=pip-tools/requirements.txt requirements.txt
-pip-tools-install:
-	test -f pip-tools/.venv/bin/python || python -m venv --upgrade-deps pip-tools/.venv
-	test -f pip-tools/.venv/bin/wheel || ./pip-tools/.venv/bin/python -m pip install -U wheel
-	pip-sync --python-executable=./pip-tools/.venv/bin/python --pip-args '--no-deps' pip-tools/requirements.txt
-pip-tools-update:
-	pip-compile --generate-hashes --resolver=backtracking --output-file=pip-tools/requirements.txt requirements.txt
-	pip-sync --python-executable=./pip-tools/.venv/bin/python --pip-args '--no-deps' pip-tools/requirements.txt
-pip-tools-add-package:
-	echo $(PACKAGE) >> requirements.txt
-	$(MAKE) pip-tools-lock pip-tools-install
-pip-tools-version:
-	@pip-compile --version | awk '{print $$3}'
-
 TOOLS := "$(TOOLS) uv"
 .PHONY: uv-tooling uv-import uv-clean-cache uv-clean-venv uv-clean-lock uv-lock uv-install uv-add-package uv-version
 uv-tooling:
