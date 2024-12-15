@@ -200,14 +200,18 @@ jobs:
         run: |
           hyperfine --runs 5 --export-csv timings/tooling.csv \
             --show-output \
-            --prepare 'uv venv' \
-            --conclude 'rm -r .venv' \
-            'uv pip install --no-cache uv' 
+            --conclude 'uv pip uninstall uv' \
+            'uv pip install --no-cache uv'
+        env:
+          UV_SYSTEM_PYTHON: "1"
 
       - name: import
         run: |
-          /usr/bin/time --output=timings/import.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make uv-import
+          hyperfine --runs 5 --export-csv timings/tooling.csv \
+            --show-output \
+            --prepare 'uv venv' \
+            --conclude 'rm -r .venv' \
+            'uv pip install --no-cache uv' 
 
       - name: lock cold
         run: |
