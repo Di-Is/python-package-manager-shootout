@@ -196,9 +196,12 @@ jobs:
       - name: install tool
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
+      - name: cd
+        run: cd uv
+
       - name: tooling
         run: |
-          hyperfine --runs 5 --export-csv timings/tooling.csv \
+          hyperfine --runs 5 --export-csv ../timings/tooling.csv \
             --show-output \
             --conclude 'uv pip uninstall uv' \
             'uv pip install --no-cache uv'
@@ -206,14 +209,11 @@ jobs:
           UV_SYSTEM_PYTHON: "1"
 
       - name: import
-        run: |
-          cd uv
-          uv add --frozen -r ../requirements.txt
+        run: uv add --frozen -r ../requirements.txt
 
       - name: lock cold
         run: |
-          cd uv
-          hyperfine --runs 5 --export-csv timings/lock-cold.csv \
+          hyperfine --runs 5 --export-csv ../timings/lock-cold.csv \
             --show-output \
             --conclude 'rm -r .venv uv.lock' \
             'uv lock --no-cache'
