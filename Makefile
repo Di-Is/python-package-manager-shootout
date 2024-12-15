@@ -2,7 +2,7 @@ SHELL=/bin/bash -eu -o pipefail
 
 
 requirements.txt:
-	curl -sL $@ https://raw.githubusercontent.com/getsentry/sentry/refs/heads/master/requirements-base.txt | grep -v -- --index-url > $@
+	echo "azure-cli" > $@
 
 .github/workflows/benchmark.yml: Makefile bin/build_workflow.sh templates/workflow_start.yml templates/workflow_tool.yml templates/workflow_end.yml
 	./bin/build_workflow.sh > $@

@@ -186,6 +186,8 @@ jobs:
 
   uv:
     runs-on: ubuntu-22.04
+    env:
+      UV_PRERELEASE: allow
     steps:
       - name: Checkout
         uses: actions/checkout@v4
