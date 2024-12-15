@@ -23,7 +23,7 @@ poetry-tooling:
 	pipx install poetry
 	poetry config virtualenvs.in-project true
 poetry-import:
-	cd poetry; poetry add $$(sed -e 's/#.*//' -e '/^$$/ d' < ../requirements.txt)
+	cd poetry; poetry add --allow-prereleases $$(sed -e 's/#.*//' -e '/^$$/ d' < ../requirements.txt)
 poetry-clean-cache: pip-clean
 	rm -rf ~/.cache/pypoetry
 poetry-clean-venv:
