@@ -288,11 +288,11 @@ jobs:
           echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
           for stat in "tooling" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
             # Extract the necessary fields from the timings CSV
-            mean=$(awk -F',' 'NR==2 {printf "%.3f", $2}' timings/$stat.csv)
-            median=$(awk -F',' 'NR==2 {printf "%.3f", $4}' timings/$stat.csv)
-            stddiv=$(awk -F',' 'NR==2 {printf "%.3f", $3}' timings/$stat.csv)
-            min=$(awk -F',' 'NR==2 {printf "%.3f", $7}' timings/$stat.csv)
-            max=$(awk -F',' 'NR==2 {printf "%.3f", $8}' timings/$stat.csv)
+            mean=$(awk -F',' 'NR==2 {printf "%.2f", $2}' timings/$stat.csv)
+            median=$(awk -F',' 'NR==2 {printf "%.2f", $4}' timings/$stat.csv)
+            stddiv=$(awk -F',' 'NR==2 {printf "%.2f", $3}' timings/$stat.csv)
+            min=$(awk -F',' 'NR==2 {printf "%.2f", $7}' timings/$stat.csv)
+            max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' timings/$stat.csv)
             
             # Append the formatted data to the stats CSV
             echo "uv,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
