@@ -39,7 +39,7 @@ jobs:
             'uv pip install --no-cache poetry'
 
       - name: install poetry
-        run: uv install portry
+        run: uv pip install portry
 
       - name: import
         run: |
