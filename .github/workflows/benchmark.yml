@@ -201,7 +201,7 @@ jobs:
           hyperfine --runs 5 --export-csv timings/tooling.csv \
             --show-output \
             --prepare 'uv venv' \
-            --conclude 'uv .venv' \
+            --conclude 'rm -r .venv' \
             'uv pip install --no-cache uv' 
 
       - name: import
