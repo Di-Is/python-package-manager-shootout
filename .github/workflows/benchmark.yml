@@ -43,8 +43,8 @@ jobs:
 
       - name: import
         run: |
-          /usr/bin/time --output=timings/import.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make poetry-import
+          cd poetry  
+          poetry add --allow-prereleases $$(sed -e 's/#.*//' -e '/^$$/ d' < ../requirements.txt)
 
       - name: lock cold
         run: |
