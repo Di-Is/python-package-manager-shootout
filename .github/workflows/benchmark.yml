@@ -272,7 +272,7 @@ jobs:
             --show-output \
             --setup 'uv cache clean' \
             --prepare 'uv sync --no-cache' \
-            --conclude 'rm -r .venv uv.lock' \
+            --conclude 'uv remove ${ADD_PACKAGE} && rm -r .venv uv.lock' \
             'uv add ${ADD_PACKAGE} --no-cache'
 
       - name: stats
