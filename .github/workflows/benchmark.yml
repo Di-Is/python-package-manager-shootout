@@ -216,7 +216,7 @@ jobs:
           cd uv
           hyperfine --runs 5 --export-csv ../timings/lock-cold.csv \
             --show-output \
-            --conclude 'rm -r .venv uv.lock' \
+            --conclude 'rm uv.lock' \
             'uv lock --no-cache'
   
       - name: lock warm
