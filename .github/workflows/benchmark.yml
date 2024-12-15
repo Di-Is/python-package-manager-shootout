@@ -54,7 +54,7 @@ jobs:
               --show-output \
               --setup 'rm -rf ~/.cache/pypoetry' \
               --conclude 'rm poetry.lock && poetry env remove --all || true' \
-              'portry lock --no-cache'
+              'poetry lock --no-cache'
     
       - name: lock warm
         run: |
@@ -63,7 +63,7 @@ jobs:
             --show-output \
             --setup 'rm -rf ~/.cache/pypoetry' \
             --conclude 'rm poetry.lock && poetry env remove --all || true' \
-            'portry lock'
+            'poetry lock'
 
       - name: install cold
         run: |
