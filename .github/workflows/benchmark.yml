@@ -221,9 +221,11 @@ jobs:
   
       - name: lock warm
         run: |
-          make uv-clean-lock
-          /usr/bin/time --output=timings/lock-warm.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make uv-lock
+          cd uv
+          hyperfine --runs 5 --warmup 1 --export-csv ../timings/lock-warm.csv \
+            --show-output \
+            --conclude 'rm uv.lock' \
+            'uv lock'
 
       - name: install cold
         run: |
