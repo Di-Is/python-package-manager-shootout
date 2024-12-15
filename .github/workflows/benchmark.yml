@@ -35,11 +35,12 @@ jobs:
           cd poetry
           hyperfine --runs 5 --export-csv ../timings/tooling.csv \
             --show-output \
-            --conclude 'uv pip uninstall poetry' \
+            --prepare 'uv venv' \
+            --conclude 'rm -r .venv' \
             'uv pip install --no-cache poetry'
 
       - name: install poetry
-        run: uv pip install portry
+        run: uv pip install poetry
 
       - name: import
         run: |
