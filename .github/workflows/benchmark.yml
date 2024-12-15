@@ -281,9 +281,17 @@ jobs:
           CSV=uv/stats.csv
           TIMESTAMP=$(date +%s)
           mkdir -p "uv"
-          echo "tool,version,timestamp,stat,elapsed time,system,user,cpu percent,max rss,inputs,outputs" > "$CSV"
+          echo "tool,version,mean,median,stddiv,min,max" > "$CSV"
           for stat in "tooling" "import" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
-            echo "uv,$VERSION,$TIMESTAMP,$stat,$(cat timings/$stat.txt | tr -d '%')" >> "$CSV"
+            # Extract the necessary fields from the timings CSV
+            mean=$(awk -F',' 'NR==2 {print $2}' timings/$stat.csv)
+            median=$(awk -F',' 'NR==2 {print $4}' timings/$stat.csv)
+            stddiv=$(awk -F',' 'NR==2 {print $3}' timings/$stat.csv)
+            min=$(awk -F',' 'NR==2 {print $7}' timings/$stat.csv)
+            max=$(awk -F',' 'NR==2 {print $8}' timings/$stat.csv)
+            
+            # Append the formatted data to the stats CSV
+            echo "uv,$VERSION,$mean,$median,$stddiv,$min,$max" >> "$CSV"
           done
           csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
 
