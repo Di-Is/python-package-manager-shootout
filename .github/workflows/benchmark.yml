@@ -101,7 +101,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.10"
 
       - name: setup
         run: ./bin/actions_prereqs.sh
@@ -187,14 +187,15 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.10"
 
       - name: setup
         run: ./bin/actions_prereqs.sh
 
       - name: tooling
         run: |
-          hyperfine --runs 5 --warmup 1 --export-csv timings/tooling.txt 'make uv-tooling'
+          /usr/bin/time --output=timings/tooling.txt --format="%e,%S,%U,%P,%M,%I,%O" \
+            make uv-tooling
 
       - name: import
         run: |
