@@ -59,7 +59,7 @@ jobs:
     
       - name: lock warm
         run: |
-          cd uv
+          cd poetry
           hyperfine --runs 5 --warmup 1 --export-csv ../timings/lock-warm.csv \
             --show-output \
             --setup 'rm -rf ~/.cache/pypoetry' \
