@@ -277,7 +277,7 @@ jobs:
 
       - name: stats
         run: |
-          VERSION=$(make uv-version)
+          VERSION=`uv --version | awk '{print $2}'`
           CSV=uv/stats.csv
           TIMESTAMP=$(date +%s)
           mkdir -p "uv"
