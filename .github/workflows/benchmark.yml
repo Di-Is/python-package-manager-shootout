@@ -191,10 +191,13 @@ jobs:
 
       - name: setup
         run: ./bin/actions_prereqs.sh
+      
+      - name: install tool
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: tooling
         run: |
-          hyperfine --runs 10 --export-csv timings/tooling.csv \
+          hyperfine --runs 5 --export-csv timings/tooling.csv \
             --prepare 'python -m venv .venv' \
             --conclude 'rm -r .venv' \
             '.venv/bin/pip install --no-cache-dir uv' 
