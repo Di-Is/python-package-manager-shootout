@@ -202,7 +202,7 @@ jobs:
             --show-output \
             --prepare 'uv venv' \
             --conclude 'uv .venv' \
-            'uv install --no-cache uv' 
+            'uv pip install --no-cache uv' 
 
       - name: import
         run: |
