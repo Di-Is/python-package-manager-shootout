@@ -5,9 +5,13 @@ name: benchmark
 on:
   push:
 
+env:
+  UV_SYSTEM_PYTHON: "1"
+
 jobs:
   poetry:
     runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -198,9 +202,9 @@ jobs:
       - name: tooling
         run: |
           hyperfine --runs 5 --export-csv timings/tooling.csv \
-            --prepare 'python -m venv .venv' \
-            --conclude 'rm -r .venv' \
-            '.venv/bin/pip install --no-cache-dir uv' 
+            --prepare 'uv venv' \
+            --conclude 'uv .venv' \
+            'uv install --no-cache uv' 
 
       - name: import
         run: |
