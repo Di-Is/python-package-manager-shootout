@@ -107,7 +107,7 @@ jobs:
           hyperfine --runs 5 --export-csv ../timings/add-package.csv \
             --show-output \
             --setup 'rm -rf ~/.cache/pypoetry && cp poetry.lock poetry.lock.bak && cp pyproject.toml pyproject.toml.bak' \
-            --prepare 'poetry install' \
+            --prepare 'rm -rf ~/.cache/pypoetry && poetry install' \
             --conclude 'poetry env remove --all && cp poetry.lock.bak poetry.lock && cp pyproject.toml.bak pyproject.toml' \
             'poetry add ${ADD_PACKAGE} --no-cache'
 
@@ -220,7 +220,7 @@ jobs:
           cd pdm
           hyperfine --runs 5 --export-csv ../timings/update-cold.csv \
             --show-output \
-            --setup 'pdm sync' \
+            --setup 'pdm install' \
             --prepare 'rm -rf ~/.cache/pdm' \
             'pdm update'
         
@@ -229,7 +229,7 @@ jobs:
           cd pdm
           hyperfine --runs 5 --warmup 1 --export-csv ../timings/update-warm.csv \
             --show-output \
-            --setup 'pdm sync' \
+            --setup 'pdm install' \
             'pdm update'
 
       - name: add package
@@ -238,7 +238,7 @@ jobs:
           hyperfine --runs 5 --export-csv ../timings/add-package.csv \
             --show-output \
             --setup 'rm -rf ~/.cache/pdm && cp pdm.lock pdm.lock.bak && cp pyproject.toml pyproject.toml.bak' \
-            --prepare 'pdm sync && rm -rf ~/.cache/pdm' \
+            --prepare 'rm -rf ~/.cache/pdm && pdm intall' \
             --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__ && cp pdm.lock.bak pdm.lock && cp pyproject.toml.bak pyproject.toml' \
             'pdm add ${ADD_PACKAGE}'
 
@@ -346,8 +346,9 @@ jobs:
           cd uv
           hyperfine --runs 5 --export-csv ../timings/update-cold.csv \
             --show-output \
-            --setup 'uv sync && uv cache clean' \
-            'uv sync --upgrade --no-cache'
+            --setup 'uv sync' \
+            --prepare 'uv cache clean' \
+            'uv sync --upgrade'
 
       - name: update warm
         run: |
@@ -363,9 +364,9 @@ jobs:
           hyperfine --runs 5 --export-csv ../timings/add-package.csv \
             --show-output \
             --setup 'uv cache clean && cp uv.lock uv.lock.bak && cp pyproject.toml pyproject.toml.bak' \
-            --prepare 'uv sync' \
+            --prepare 'uv cache clean && uv sync' \
             --conclude 'rm -r .venv && cp uv.lock.bak uv.lock && cp pyproject.toml.bak pyproject.toml' \
-            'uv add ${ADD_PACKAGE} --no-cache'
+            'uv add ${ADD_PACKAGE}'
 
       - name: stats
         run: |
