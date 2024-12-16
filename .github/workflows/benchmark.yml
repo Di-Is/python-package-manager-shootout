@@ -112,7 +112,7 @@ jobs:
 
       - name: stats
         run: |
-          VERSION=`poetry --version | awk '{print $$3}' | tr -d ')'`
+          VERSION=`poetry --version | awk '{print $3}' | tr -d ')'`
           CSV=poetry/stats.csv
           TIMESTAMP=$(date +%s)
           mkdir -p "poetry"
@@ -243,7 +243,7 @@ jobs:
 
       - name: stats
         run: |
-          VERSION=`pdm --version | awk '{print $$3}'`
+          VERSION=`pdm --version | awk '{print $3}'`
           CSV=pdm/stats.csv
           TIMESTAMP=$(date +%s)
           mkdir -p "pdm"
