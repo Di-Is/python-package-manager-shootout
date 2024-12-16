@@ -238,7 +238,7 @@ jobs:
           hyperfine --runs 5 --export-csv ../timings/add-package.csv \
             --show-output \
             --setup 'rm -rf ~/.cache/pdm && cp pdm.lock pdm.lock.bak && cp pyproject.toml pyproject.toml.bak' \
-            --prepare 'rm -rf ~/.cache/pdm && pdm intall' \
+            --prepare 'rm -rf ~/.cache/pdm && pdm install' \
             --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__ && cp pdm.lock.bak pdm.lock && cp pyproject.toml.bak pyproject.toml' \
             'pdm add ${ADD_PACKAGE}'
 
