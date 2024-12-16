@@ -113,9 +113,9 @@ jobs:
       - name: stats
         run: |
           VERSION=`poetry --version | awk '{print $$3}' | tr -d ')'`
-          CSV=uv/stats.csv
+          CSV=poetry/stats.csv
           TIMESTAMP=$(date +%s)
-          mkdir -p "uv"
+          mkdir -p "poetry"
           echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
           for stat in "tooling" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
             # Extract the necessary fields from the timings CSV
@@ -126,7 +126,7 @@ jobs:
             max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' timings/$stat.csv)
             
             # Append the formatted data to the stats CSV
-            echo "uv,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
+            echo "poetry,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
           done
           csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
 
@@ -160,66 +160,103 @@ jobs:
 
       - name: tooling
         run: |
-          /usr/bin/time --output=timings/tooling.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make pdm-tooling
+          cd pdm
+          hyperfine --runs 5 --export-csv ../timings/tooling.csv \
+            --show-output \
+            --prepare 'uv venv' \
+            --conclude 'rm -r .venv' \
+            'uv pip install --no-cache pdm'
+
+      - name: install pdm
+        run: uv pip install pdm
+        env:
+          UV_SYSTEM_PYTHON: "1"
+    
 
       - name: import
         run: |
-          /usr/bin/time --output=timings/import.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make pdm-import
+          cd pdm  
+          pdm import -f requirements ../requirements.txt
 
       - name: lock cold
         run: |
-          make pdm-clean-cache
-          make pdm-clean-venv
-          make pdm-clean-lock
-          /usr/bin/time --output=timings/lock-cold.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make pdm-lock
-
+          cd pdm
+          hyperfine --runs 5 --export-csv ../timings/lock-cold.csv \
+            --show-output \
+            --setup 'rm -rf ~/.cache/pdm' \
+            --conclude 'rm pdm.lock && rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
+            'pdm lock --no-cache'
+      
       - name: lock warm
         run: |
-          make pdm-clean-lock
-          /usr/bin/time --output=timings/lock-warm.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make pdm-lock
+          cd pdm
+          hyperfine --runs 5 --warmup 1 --export-csv ../timings/lock-warm.csv \
+            --show-output \
+            --setup 'rm -rf ~/.cache/pdm' \
+            --conclude 'rm pdm.lock && rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
+          'pdm lock'
 
       - name: install cold
         run: |
-          make pdm-clean-cache
-          make pdm-clean-venv
-          /usr/bin/time --output=timings/install-cold.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make pdm-install
-
+          cd pdm
+          hyperfine --runs 5 --export-csv ../timings/install-cold.csv \
+            --show-output \
+            --setup 'pdm lock && rm -rf ~/.cache/pdm' \
+            --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
+            'pdm sync --no-cache'
+      
       - name: install warm
         run: |
-          make pdm-clean-venv
-          /usr/bin/time --output=timings/install-warm.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make pdm-install
+          cd pdm
+          hyperfine --runs 5 --warmup 1 --export-csv ../timings/install-warm.csv \
+            --show-output \
+            --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
+            'pdm sync'
 
       - name: update cold
         run: |
-          make pdm-clean-cache
-          /usr/bin/time --output=timings/update-cold.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make pdm-update
-
+          cd pdm
+          hyperfine --runs 5 --export-csv ../timings/update-cold.csv \
+            --show-output \
+            --setup 'pdm sync' \
+            --prepare 'rm -rf ~/.cache/pdm' \
+            'pdm update --no-cache'
+        
       - name: update warm
         run: |
-          /usr/bin/time --output=timings/update-warm.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make pdm-update
+          cd pdm
+          hyperfine --runs 5 --warmup 1 --export-csv ../timings/update-warm.csv \
+            --show-output \
+            --setup 'pdm sync' \
+            'pdm update'
 
       - name: add package
         run: |
-          /usr/bin/time --output=timings/add-package.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make pdm-add-package
+          cd pdm
+          hyperfine --runs 5 --export-csv ../timings/add-package.csv \
+            --show-output \
+            --setup 'rm -rf ~/.cache/pdm && cp pdm.lock pdm.lock.bak && cp pyproject.toml pyproject.toml.bak' \
+            --prepare 'pdm sync' \
+            --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__ && cp pdm.lock.bak pdm.lock && cp pyproject.toml.bak pyproject.toml' \
+            'pdm add ${ADD_PACKAGE} --no-cache'
 
       - name: stats
         run: |
-          VERSION=$(make pdm-version)
+          VERSION=`pdm --version | awk '{print $$3}'`
           CSV=pdm/stats.csv
           TIMESTAMP=$(date +%s)
           mkdir -p "pdm"
-          echo "tool,version,timestamp,stat,elapsed time,system,user,cpu percent,max rss,inputs,outputs" > "$CSV"
-          for stat in "tooling" "import" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
-            echo "pdm,$VERSION,$TIMESTAMP,$stat,$(cat timings/$stat.txt | tr -d '%')" >> "$CSV"
+          echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
+          for stat in "tooling" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
+            # Extract the necessary fields from the timings CSV
+            mean=$(awk -F',' 'NR==2 {printf "%.2f", $2}' timings/$stat.csv)
+            median=$(awk -F',' 'NR==2 {printf "%.2f", $4}' timings/$stat.csv)
+            stddiv=$(awk -F',' 'NR==2 {printf "%.2f", $3}' timings/$stat.csv)
+            min=$(awk -F',' 'NR==2 {printf "%.2f", $7}' timings/$stat.csv)
+            max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' timings/$stat.csv)
+            
+            # Append the formatted data to the stats CSV
+            echo "pdm,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
           done
           csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
 
