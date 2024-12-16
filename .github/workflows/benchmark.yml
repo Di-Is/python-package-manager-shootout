@@ -183,9 +183,9 @@ jobs:
           cd pdm
           hyperfine --runs 5 --export-csv ../timings/lock-cold.csv \
             --show-output \
-            --setup 'rm -rf ~/.cache/pdm' \
+            --prepare 'rm -rf ~/.cache/pdm' \
             --conclude 'rm pdm.lock && rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
-            'pdm lock --no-cache'
+            'pdm lock'
       
       - name: lock warm
         run: |
@@ -202,8 +202,9 @@ jobs:
           hyperfine --runs 5 --export-csv ../timings/install-cold.csv \
             --show-output \
             --setup 'pdm lock && rm -rf ~/.cache/pdm' \
+            --prepare 'rm -rf ~/.cache/pdm' \
             --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
-            'pdm sync --no-cache'
+            'pdm sync'
       
       - name: install warm
         run: |
@@ -220,7 +221,7 @@ jobs:
             --show-output \
             --setup 'pdm sync' \
             --prepare 'rm -rf ~/.cache/pdm' \
-            'pdm update --no-cache'
+            'pdm update'
         
       - name: update warm
         run: |
@@ -236,9 +237,9 @@ jobs:
           hyperfine --runs 5 --export-csv ../timings/add-package.csv \
             --show-output \
             --setup 'rm -rf ~/.cache/pdm && cp pdm.lock pdm.lock.bak && cp pyproject.toml pyproject.toml.bak' \
-            --prepare 'pdm sync' \
+            --prepare 'pdm sync && rm -rf ~/.cache/pdm' \
             --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__ && cp pdm.lock.bak pdm.lock && cp pyproject.toml.bak pyproject.toml' \
-            'pdm add ${ADD_PACKAGE} --no-cache'
+            'pdm add ${ADD_PACKAGE}'
 
       - name: stats
         run: |
