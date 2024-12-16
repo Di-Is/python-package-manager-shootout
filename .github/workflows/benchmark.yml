@@ -328,9 +328,10 @@ jobs:
           cd uv
           hyperfine --runs 5 --export-csv ../timings/install-cold.csv \
             --show-output \
-            --setup 'uv lock && uv cache clean' \
+            --setup 'uv lock' \
+            --prepare 'uv cache clean' \
             --conclude 'rm -r .venv' \
-            'uv sync --no-cache'
+            'uv sync'
 
       - name: install warm
         run: |
