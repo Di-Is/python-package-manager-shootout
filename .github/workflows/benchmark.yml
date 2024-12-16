@@ -172,11 +172,10 @@ jobs:
         run: uv pip install pdm
         env:
           UV_SYSTEM_PYTHON: "1"
-    
 
       - name: import
         run: |
-          cd pdm  
+          cd pdm
           pdm import -f requirements ../requirements.txt
 
       - name: lock cold
@@ -193,7 +192,7 @@ jobs:
           cd pdm
           hyperfine --runs 5 --warmup 1 --export-csv ../timings/lock-warm.csv \
             --show-output \
-            --setup 'rm -rf ~/.cache/pdm' \
+            --setup 'pdm cache clear' \
             --conclude 'rm pdm.lock && rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
           'pdm lock'
 
@@ -203,7 +202,7 @@ jobs:
           hyperfine --runs 5 --export-csv ../timings/install-cold.csv \
             --show-output \
             --setup 'pdm lock' \
-            --prepare 'rm -rf ~/.cache/pdm' \
+            --prepare 'pdm cache clear' \
             --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
             'pdm install'
       
@@ -221,7 +220,7 @@ jobs:
           hyperfine --runs 5 --export-csv ../timings/update-cold.csv \
             --show-output \
             --setup 'pdm install' \
-            --prepare 'rm -rf ~/.cache/pdm' \
+            --prepare 'pdm cache clear' \
             'pdm update'
         
       - name: update warm
@@ -237,8 +236,8 @@ jobs:
           cd pdm
           hyperfine --runs 5 --export-csv ../timings/add-package.csv \
             --show-output \
-            --setup 'rm -rf ~/.cache/pdm && cp pdm.lock pdm.lock.bak && cp pyproject.toml pyproject.toml.bak' \
-            --prepare 'rm -rf ~/.cache/pdm && pdm install' \
+            --setup 'cp pdm.lock pdm.lock.bak && cp pyproject.toml pyproject.toml.bak' \
+            --prepare 'pdm cache clear && pdm install' \
             --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__ && cp pdm.lock.bak pdm.lock && cp pyproject.toml.bak pyproject.toml' \
             'pdm add ${ADD_PACKAGE}'
 
