@@ -71,9 +71,10 @@ jobs:
           cd poetry
           hyperfine --runs 5 --export-csv ../timings/install-cold.csv \
             --show-output \
-            --setup 'poetry lock && rm -rf ~/.cache/pypoetry' \
+            --setup 'poetry lock' \
+            --prepare 'rm -rf ~/.cache/pypoetry' \
             --conclude 'poetry env remove --all || true' \
-            'poetry install --no-cache'
+            'poetry install'
     
       - name: install warm
         run: |
