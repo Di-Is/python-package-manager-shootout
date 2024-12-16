@@ -68,42 +68,64 @@ jobs:
 
       - name: install cold
         run: |
-          make poetry-clean-cache
-          make poetry-clean-venv
-          /usr/bin/time --output=timings/install-cold.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make poetry-install
-
+          cd poetry
+          hyperfine --runs 5 --export-csv ../timings/install-cold.csv \
+            --show-output \
+            --setup 'poetry lock && rm -rf ~/.cache/pypoetry' \
+            --conclude 'poetry env remove --all || true' \
+            'poetry install --no-cache'
+    
       - name: install warm
         run: |
-          make poetry-clean-venv
-          /usr/bin/time --output=timings/install-warm.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make poetry-install
+          cd poetry
+          hyperfine --runs 5 --warmup 1 --export-csv ../timings/install-warm.csv \
+            --show-output \
+            --conclude 'poetry env remove --all || true' \
+            'poetry install'
 
       - name: update cold
         run: |
-          make poetry-clean-cache
-          /usr/bin/time --output=timings/update-cold.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make poetry-update
-
+          cd poetry
+          hyperfine --runs 5 --export-csv ../timings/update-cold.csv \
+            --show-output \
+            --setup 'poetry install && rm -rf ~/.cache/pypoetry' \
+            'poetry update --no-cache'
+    
       - name: update warm
         run: |
-          /usr/bin/time --output=timings/update-warm.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make poetry-update
+          cd poetry
+          hyperfine --runs 5 --warmup 1 --export-csv ../timings/update-warm.csv \
+            --show-output \
+            --setup 'poetry install' \
+            'poetry update'
 
       - name: add package
         run: |
-          /usr/bin/time --output=timings/add-package.txt --format="%e,%S,%U,%P,%M,%I,%O" \
-            make poetry-add-package
+          cd poetry
+          hyperfine --runs 5 --export-csv ../timings/add-package.csv \
+            --show-output \
+            --setup 'rm -rf ~/.cache/pypoetry && cp poetry.lock poetry.lock.bak && cp pyproject.toml pyproject.toml.bak' \
+            --prepare 'poetry install' \
+            --conclude 'poetry env remove --all && cp poetry.lock.bak poetry.lock && cp pyproject.toml.bak pyproject.toml' \
+            'poetry add ${ADD_PACKAGE} --no-cache'
 
       - name: stats
         run: |
-          VERSION=$(make poetry-version)
-          CSV=poetry/stats.csv
+          VERSION=`poetry --version | awk '{print $$3}' | tr -d ')'`
+          CSV=uv/stats.csv
           TIMESTAMP=$(date +%s)
-          mkdir -p "poetry"
-          echo "tool,version,timestamp,stat,elapsed time,system,user,cpu percent,max rss,inputs,outputs" > "$CSV"
-          for stat in "tooling" "import" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
-            echo "poetry,$VERSION,$TIMESTAMP,$stat,$(cat timings/$stat.txt | tr -d '%')" >> "$CSV"
+          mkdir -p "uv"
+          echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
+          for stat in "tooling" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
+            # Extract the necessary fields from the timings CSV
+            mean=$(awk -F',' 'NR==2 {printf "%.2f", $2}' timings/$stat.csv)
+            median=$(awk -F',' 'NR==2 {printf "%.2f", $4}' timings/$stat.csv)
+            stddiv=$(awk -F',' 'NR==2 {printf "%.2f", $3}' timings/$stat.csv)
+            min=$(awk -F',' 'NR==2 {printf "%.2f", $7}' timings/$stat.csv)
+            max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' timings/$stat.csv)
+            
+            # Append the formatted data to the stats CSV
+            echo "uv,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
           done
           csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
 
