@@ -184,7 +184,7 @@ jobs:
           hyperfine --runs 5 --export-csv ../timings/lock-cold.csv \
             --show-output \
             --prepare 'rm -rf ~/.cache/pdm' \
-            --conclude 'rm pdm.lock && rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
+            --conclude 'rm -rf pdm.lock .venv __pypackages__ && mkdir __pypackages__' \
             'pdm lock'
       
       - name: lock warm
@@ -193,7 +193,7 @@ jobs:
           hyperfine --runs 5 --warmup 1 --export-csv ../timings/lock-warm.csv \
             --show-output \
             --setup 'pdm cache clear' \
-            --conclude 'rm pdm.lock && rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
+            --conclude 'rm -rf pdm.lock .venv __pypackages__ && mkdir __pypackages__' \
           'pdm lock'
 
       - name: install cold
@@ -203,7 +203,7 @@ jobs:
             --show-output \
             --setup 'pdm lock' \
             --prepare 'pdm cache clear' \
-            --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
+            --conclude 'rm -rf .venv __pypackages__ && mkdir __pypackages__' \
             'pdm install'
       
       - name: install warm
@@ -211,7 +211,7 @@ jobs:
           cd pdm
           hyperfine --runs 5 --warmup 1 --export-csv ../timings/install-warm.csv \
             --show-output \
-            --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__' \
+            --conclude 'rm -rf .venv __pypackages__ && mkdir __pypackages__' \
             'pdm install'
 
       - name: update cold
@@ -238,7 +238,7 @@ jobs:
             --show-output \
             --setup 'cp pdm.lock pdm.lock.bak && cp pyproject.toml pyproject.toml.bak' \
             --prepare 'pdm cache clear && pdm install' \
-            --conclude 'rm -rf pdm/.venv pdm/__pypackages__ && mkdir -p pdm/__pypackages__ && cp pdm.lock.bak pdm.lock && cp pyproject.toml.bak pyproject.toml' \
+            --conclude 'rm -rf .venv __pypackages__ && mkdir __pypackages__ && cp pdm.lock.bak pdm.lock && cp pyproject.toml.bak pyproject.toml' \
             'pdm add ${ADD_PACKAGE}'
 
       - name: stats
