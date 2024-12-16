@@ -89,7 +89,7 @@ jobs:
           hyperfine --runs 5 --export-csv ../timings/update-cold.csv \
             --show-output \
             --setup 'poetry install' \
-            --prepare 'rm -rf ~/.cache/pypoetry' \ 
+            --prepare 'rm -rf ~/.cache/pypoetry' \
             'poetry update --no-cache'
     
       - name: update warm
