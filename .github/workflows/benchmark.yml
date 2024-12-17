@@ -113,7 +113,7 @@ jobs:
             --show-output \
             --setup '${{ matrix.tools.backup }}' \
             --prepare '${{ matrix.tools.clean-cache }} && ${{ matrix.tools.sync }}' \
-            --conclude '${{ matrix.tools.roleback }}' \
+            --conclude '${{ matrix.tools.roleback }} && ${{ matrix.tools.clean-venv }}' \
             '${{ matrix.tools.add }} ${ADD_PACKAGE}'
 
       - name: stats
