@@ -30,7 +30,7 @@ jobs:
             version: uv --version | awk '{print $2}'
     defaults:
       run:
-        working-directory: ${{ matrix.tools.name }}
+        working-directory: ./${{ matrix.tools.name }}
 
     steps:
       - name: Checkout
