@@ -23,7 +23,7 @@ jobs:
             import: uv add -r ../requirements.txt
             lock: uv lock
             sync: uv sync
-            update: uv sync --update
+            update: uv sync --upgrade
             add: uv add
             backup: cp uv.lock uv.lock.bak && cp pyproject.toml pyproject.toml.bak
             roleback: cp uv.lock.bak uv.lock && cp pyproject.toml.bak pyproject.toml
