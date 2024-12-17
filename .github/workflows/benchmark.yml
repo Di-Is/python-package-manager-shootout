@@ -119,7 +119,7 @@ jobs:
       - name: stats
         run: |
           VERSION=`${{ matrix.tools.version }}`
-          CSV=${{ matrix.tools.name }}/stats.csv
+          CSV=stats.csv
           TIMESTAMP=$(date +%s)
           echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
           for stat in "tooling" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
