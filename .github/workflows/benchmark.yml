@@ -69,7 +69,66 @@ jobs:
           name: pip-stats
           path: pip/stats.csv
           retention-days: 10
+  uv-pip:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+  
+      - name: setup
+        run: ./bin/actions_prereqs.sh
+  
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: cold install
+        run: |
+          hyperfine --runs 5 --export-csv timings/install-cold.csv \
+            --show-output \
+            --prepare 'uv venv' \
+            --conclude 'rm -r .venv && uv cache clear' \
+            'uv pip install -r requirements.txt'
+  
+      - name: warm install
+        run: |
+          hyperfine --runs 5 --warmup 1 --export-csv timings/install-warm.csv \
+            --show-output \
+            --prepare 'uv venv' \
+            --conclude 'rm -r .venv' \
+            'uv pip install -r requirements.txt'
+
+      - name: stats
+        run: |
+          VERSION=`uv --version | awk '{print $2}'`
+          CSV=uv-pip/stats.csv
+          TIMESTAMP=$(date +%s)
+          mkdir -p "pip"
+          echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
+          for stat in "install-cold" "install-warm"; do
+            # Extract the necessary fields from the timings CSV
+            mean=$(awk -F',' 'NR==2 {printf "%.2f", $2}' timings/$stat.csv)
+            median=$(awk -F',' 'NR==2 {printf "%.2f", $4}' timings/$stat.csv)
+            stddiv=$(awk -F',' 'NR==2 {printf "%.2f", $3}' timings/$stat.csv)
+            min=$(awk -F',' 'NR==2 {printf "%.2f", $7}' timings/$stat.csv)
+            max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' timings/$stat.csv)
+            # Append the formatted data to the stats CSV
+            echo "pip,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
+          done
+          csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
+
+      - uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: uv-pip-stats
+          path: uv-pip/stats.csv
+          retention-days: 10
   
   poetry:
     runs-on: ubuntu-22.04
