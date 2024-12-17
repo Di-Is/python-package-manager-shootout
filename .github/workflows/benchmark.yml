@@ -70,67 +70,6 @@ jobs:
           path: pip/stats.csv
           retention-days: 10
 
-  pipx:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-  
-      - name: setup
-        run: ./bin/actions_prereqs.sh
-  
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
-
-      - name: cold install
-        run: |
-          hyperfine --runs 5 --export-csv timings/install-cold.csv \
-            --show-output \
-            --prepare 'uv venv && uv pip install pipx' \
-            --conclude 'rm -r .venv && rm -r ~/.local/pipx' \
-            'cat requirements.txt | .venv/bin/pipx install -'
-  
-      - name: warm install
-        run: |
-          hyperfine --runs 5 --warmup 1 --export-csv timings/install-warm.csv \
-            --show-output \
-            --prepare 'uv venv && uv pip install pipx' \
-            --conclude 'rm -r .venv' \
-            'cat requirements.txt | .venv/bin/pipx install -'
-
-      - name: stats
-        run: |
-          VERSION=`uv venv && uv pip install pip && pipx --version`
-          CSV=pipx/stats.csv
-          TIMESTAMP=$(date +%s)
-          mkdir -p "pipx"
-          echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
-          for stat in "install-cold" "install-warm"; do
-            # Extract the necessary fields from the timings CSV
-            mean=$(awk -F',' 'NR==2 {printf "%.2f", $2}' timings/$stat.csv)
-            median=$(awk -F',' 'NR==2 {printf "%.2f", $4}' timings/$stat.csv)
-            stddiv=$(awk -F',' 'NR==2 {printf "%.2f", $3}' timings/$stat.csv)
-            min=$(awk -F',' 'NR==2 {printf "%.2f", $7}' timings/$stat.csv)
-            max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' timings/$stat.csv)
-            # Append the formatted data to the stats CSV
-            echo "pipx,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
-          done
-          csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
-
-      - uses: actions/upload-artifact@v4
-        if: github.ref == 'refs/heads/main'
-        with:
-          name: pipx-stats
-          path: pipx/stats.csv
-          retention-days: 10
-
   uv-pip:
     runs-on: ubuntu-22.04
     steps:
