@@ -42,8 +42,7 @@ jobs:
           python-version: "3.9"
 
       - name: setup
-        run: ./bin/actions_prereqs.sh
-        working-directory: ..
+        run: ../bin/actions_prereqs.sh
       
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@v4
