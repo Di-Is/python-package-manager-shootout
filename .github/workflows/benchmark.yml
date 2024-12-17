@@ -7,10 +7,31 @@ on:
 
 env:
   ADD_PACKAGE: goodconf
+  UV_PYTHON_PREFERENCE: only-system
 
 jobs:
-  pip:
+  benchmark:
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        tools: 
+          - name: uv
+            install-tool: ""
+            clean-cache: uv cache clean
+            clean-venv: rm -rf .venv
+            clean-lock: rm -rf uv.lock
+            import: uv add -r ../requrements.txt
+            lock: uv lock
+            sync: uv sync
+            update: uv symc --update
+            add: uv add
+            backup: cp uv.lock uv.lock.bak && cp pyproject.toml pyproject.toml.bak
+            roleback: cp uv.lock.bak uv.lock && cp pyproject.toml.bak pyproject.toml
+            version: uv --version | awk '{print $2}'
+    defaults:
+      run:
+        working-directory: ${{ matrix.tools.name }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,226 +40,88 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.9"
-  
+
       - name: setup
         run: ./bin/actions_prereqs.sh
-  
+        working-directory: ..
+      
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@v4
         with:
           version: "latest"
 
-      - name: cold install
+      - name: install tool
         run: |
-          hyperfine --runs 5 --export-csv timings/install-cold.csv \
-            --show-output \
-            --prepare 'uv venv && uv pip install pip' \
-            --conclude 'rm -r .venv && pip cache purge' \
-            '.venv/bin/pip install -r requirements.txt'
-  
-      - name: warm install
-        run: |
-          hyperfine --runs 5 --warmup 1 --export-csv timings/install-warm.csv \
-            --show-output \
-            --prepare 'uv venv && uv pip install pip' \
-            --conclude 'rm -r .venv' \
-            '.venv/bin/pip install -r requirements.txt'
-
-      - name: stats
-        run: |
-          VERSION=`uv venv && uv pip install pip && pip --version | grep -oP 'pip \K[\d.]+'`
-          CSV=pip/stats.csv
-          TIMESTAMP=$(date +%s)
-          mkdir -p "pip"
-          echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
-          for stat in "install-cold" "install-warm"; do
-            # Extract the necessary fields from the timings CSV
-            mean=$(awk -F',' 'NR==2 {printf "%.2f", $2}' timings/$stat.csv)
-            median=$(awk -F',' 'NR==2 {printf "%.2f", $4}' timings/$stat.csv)
-            stddiv=$(awk -F',' 'NR==2 {printf "%.2f", $3}' timings/$stat.csv)
-            min=$(awk -F',' 'NR==2 {printf "%.2f", $7}' timings/$stat.csv)
-            max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' timings/$stat.csv)
-            # Append the formatted data to the stats CSV
-            echo "pip,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
-          done
-          csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
-
-      - uses: actions/upload-artifact@v4
-        if: github.ref == 'refs/heads/main'
-        with:
-          name: pip-stats
-          path: pip/stats.csv
-          retention-days: 10
-
-  uv-pip:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-  
-      - name: setup
-        run: ./bin/actions_prereqs.sh
-  
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
-
-      - name: cold install
-        run: |
-          hyperfine --runs 5 --export-csv timings/install-cold.csv \
+          hyperfine --runs 5 --export-csv timings/tooling.csv \
             --show-output \
             --prepare 'uv venv' \
             --conclude 'rm -r .venv && uv cache clean' \
-            'uv pip install --prerelease allow -r requirements.txt'
+            'uv pip install ${{ matrix.tools.name }}'
+
+      - name: import
+        run: ${{ matrix.tools.import }}
+
+      - name: lock cold
+        run: |
+          hyperfine --runs 5 --export-csv timings/lock-cold.csv \
+            --show-output \
+            --prepare '${{ matrix.tools.clean-cache }}' \
+            --conclude '${{ matrix.tools.clean-lock }}' \
+            '${{ matrix.tools.lock }}'
   
-      - name: warm install
+      - name: lock warm
+        run: |
+          hyperfine --runs 5 --warmup 1 --export-csv timings/lock-warm.csv \
+            --show-output \
+            --conclude '${{ matrix.tools.clean-lock }}' \
+            '${{ matrix.tools.lock }}'
+
+      - name: install cold
+        run: |
+          hyperfine --runs 5 --export-csv timings/install-cold.csv \
+            --show-output \
+            --setup '${{ matrix.tools.lock }}' \
+            --prepare '${{ matrix.tools.clean-cache }}' \
+            --conclude '${{ matrix.tools.clean-venv }}' \
+            '${{ matrix.tools.sync }}'
+
+      - name: install warm
         run: |
           hyperfine --runs 5 --warmup 1 --export-csv timings/install-warm.csv \
             --show-output \
-            --prepare 'uv venv' \
-            --conclude 'rm -r .venv' \
-            'uv pip install --prerelease allow -r requirements.txt'
-
-      - name: stats
-        run: |
-          VERSION=`uv --version | awk '{print $2}'`
-          CSV=uv-pip/stats.csv
-          TIMESTAMP=$(date +%s)
-          mkdir -p "uv-pip"
-          echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
-          for stat in "install-cold" "install-warm"; do
-            # Extract the necessary fields from the timings CSV
-            mean=$(awk -F',' 'NR==2 {printf "%.2f", $2}' timings/$stat.csv)
-            median=$(awk -F',' 'NR==2 {printf "%.2f", $4}' timings/$stat.csv)
-            stddiv=$(awk -F',' 'NR==2 {printf "%.2f", $3}' timings/$stat.csv)
-            min=$(awk -F',' 'NR==2 {printf "%.2f", $7}' timings/$stat.csv)
-            max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' timings/$stat.csv)
-            # Append the formatted data to the stats CSV
-            echo "uv pip,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
-          done
-          csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
-
-      - uses: actions/upload-artifact@v4
-        if: github.ref == 'refs/heads/main'
-        with:
-          name: uv-pip-stats
-          path: uv-pip/stats.csv
-          retention-days: 10
-  
-  poetry:
-    runs-on: ubuntu-22.04
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
-
-      - name: setup
-        run: ./bin/actions_prereqs.sh
-
-      - name: tooling
-        run: |
-          cd poetry
-          hyperfine --runs 5 --export-csv ../timings/tooling.csv \
-            --show-output \
-            --prepare 'uv venv' \
-            --conclude 'rm -r .venv' \
-            'uv pip install --no-cache poetry'
-
-      - name: install poetry
-        run: uv pip install poetry
-        env:
-          UV_SYSTEM_PYTHON: "1"
-
-      - name: import
-        run: |
-          cd poetry  
-          poetry add --allow-prereleases $(sed -e 's/#.*//' -e '/^$$/ d' < ../requirements.txt)
-
-      - name: lock cold
-        run: |
-            cd poetry
-            hyperfine --runs 5 --export-csv ../timings/lock-cold.csv \
-              --show-output \
-              --setup 'rm -rf ~/.cache/pypoetry' \
-              --conclude 'rm poetry.lock && poetry env remove --all || true' \
-              'poetry lock --no-cache'
+            --setup '${{ matrix.tools.lock }}' \
+            --conclude '${{ matrix.tools.clean-venv }}' \
+            '${{ matrix.tools.sync }}'
     
-      - name: lock warm
-        run: |
-          cd poetry
-          hyperfine --runs 5 --warmup 1 --export-csv ../timings/lock-warm.csv \
-            --show-output \
-            --setup 'rm -rf ~/.cache/pypoetry' \
-            --conclude 'rm poetry.lock && poetry env remove --all || true' \
-            'poetry lock'
-
-      - name: install cold
-        run: |
-          cd poetry
-          hyperfine --runs 5 --export-csv ../timings/install-cold.csv \
-            --show-output \
-            --setup 'poetry lock' \
-            --prepare 'rm -rf ~/.cache/pypoetry' \
-            --conclude 'poetry env remove --all || true' \
-            'poetry install'
-    
-      - name: install warm
-        run: |
-          cd poetry
-          hyperfine --runs 5 --warmup 1 --export-csv ../timings/install-warm.csv \
-            --show-output \
-            --conclude 'poetry env remove --all || true' \
-            'poetry install'
-
       - name: update cold
         run: |
-          cd poetry
-          hyperfine --runs 5 --export-csv ../timings/update-cold.csv \
+          hyperfine --runs 5 --export-csv timings/update-cold.csv \
             --show-output \
-            --setup 'poetry install' \
-            --prepare 'rm -rf ~/.cache/pypoetry' \
-            'poetry update --no-cache'
-    
+            --setup '${{ matrix.tools.sync }}' \
+            --prepare '${{ matrix.tools.clean-cache }}' \
+            '${{ matrix.tools.update }}'
+
       - name: update warm
         run: |
-          cd poetry
-          hyperfine --runs 5 --warmup 1 --export-csv ../timings/update-warm.csv \
+          hyperfine --runs 5 --warmup 1 --export-csv timings/update-warm.csv \
             --show-output \
-            --setup 'poetry install' \
-            'poetry update'
+            --setup '${{ matrix.tools.sync }}' \
+            '${{ matrix.tools.update }}'
 
       - name: add package
         run: |
-          cd poetry
-          hyperfine --runs 5 --export-csv ../timings/add-package.csv \
+          hyperfine --runs 5 --export-csv timings/add-package.csv \
             --show-output \
-            --setup 'rm -rf ~/.cache/pypoetry && cp poetry.lock poetry.lock.bak && cp pyproject.toml pyproject.toml.bak' \
-            --prepare 'rm -rf ~/.cache/pypoetry && poetry install' \
-            --conclude 'poetry env remove --all && cp poetry.lock.bak poetry.lock && cp pyproject.toml.bak pyproject.toml' \
-            'poetry add ${ADD_PACKAGE} --no-cache'
+            --setup '${{ matrix.tools.backup }}' \
+            --prepare '${{ matrix.tools.clean-cache }} && uv sync' \
+            --conclude '${{ matrix.tools.clean-cache }} && ${{ matrix.tools.roleback }}' \
+            '${{ matrix.tools.add }} ${ADD_PACKAGE}'
 
       - name: stats
         run: |
-          VERSION=`poetry --version | awk '{print $3}' | tr -d ')'`
-          CSV=poetry/stats.csv
+          VERSION=`${{ matrix.tools.version }}`
+          CSV=${{ matrix.tools.name }}/stats.csv
           TIMESTAMP=$(date +%s)
-          mkdir -p "poetry"
           echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
           for stat in "tooling" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
             # Extract the necessary fields from the timings CSV
@@ -249,288 +132,13 @@ jobs:
             max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' timings/$stat.csv)
             
             # Append the formatted data to the stats CSV
-            echo "poetry,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
+            echo "${{ matrix.tools.name }},$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
           done
           csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
 
       - uses: actions/upload-artifact@v4
         if: github.ref == 'refs/heads/main'
         with:
-          name: poetry-stats
-          path: poetry/stats.csv
-          retention-days: 10
-
-  pdm:
-    runs-on: ubuntu-22.04
-    env:
-      PDM_RESOLVE_MAX_ROUNDS: 1000
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
-
-      - name: setup
-        run: ./bin/actions_prereqs.sh
-
-      - name: tooling
-        run: |
-          cd pdm
-          hyperfine --runs 5 --export-csv ../timings/tooling.csv \
-            --show-output \
-            --prepare 'uv venv' \
-            --conclude 'rm -r .venv' \
-            'uv pip install --no-cache pdm'
-
-      - name: install pdm
-        run: uv pip install pdm
-        env:
-          UV_SYSTEM_PYTHON: "1"
-
-      - name: import
-        run: |
-          cd pdm
-          pdm import -f requirements ../requirements.txt
-
-      - name: lock cold
-        run: |
-          cd pdm
-          hyperfine --runs 5 --export-csv ../timings/lock-cold.csv \
-            --show-output \
-            --prepare 'rm -rf ~/.cache/pdm' \
-            --conclude 'rm -rf pdm.lock .venv __pypackages__ && mkdir __pypackages__' \
-            'pdm lock'
-      
-      - name: lock warm
-        run: |
-          cd pdm
-          hyperfine --runs 5 --warmup 1 --export-csv ../timings/lock-warm.csv \
-            --show-output \
-            --setup 'pdm cache clear' \
-            --conclude 'rm -rf pdm.lock .venv __pypackages__ && mkdir __pypackages__' \
-          'pdm lock'
-
-      - name: install cold
-        run: |
-          cd pdm
-          hyperfine --runs 5 --export-csv ../timings/install-cold.csv \
-            --show-output \
-            --setup 'pdm lock' \
-            --prepare 'pdm cache clear' \
-            --conclude 'rm -rf .venv __pypackages__ && mkdir __pypackages__' \
-            'pdm install'
-      
-      - name: install warm
-        run: |
-          cd pdm
-          hyperfine --runs 5 --warmup 1 --export-csv ../timings/install-warm.csv \
-            --show-output \
-            --conclude 'rm -rf .venv __pypackages__ && mkdir __pypackages__' \
-            'pdm install'
-
-      - name: update cold
-        run: |
-          cd pdm
-          hyperfine --runs 5 --export-csv ../timings/update-cold.csv \
-            --show-output \
-            --setup 'pdm install' \
-            --prepare 'pdm cache clear' \
-            'pdm update'
-        
-      - name: update warm
-        run: |
-          cd pdm
-          hyperfine --runs 5 --warmup 1 --export-csv ../timings/update-warm.csv \
-            --show-output \
-            --setup 'pdm install' \
-            'pdm update'
-
-      - name: add package
-        run: |
-          cd pdm
-          hyperfine --runs 5 --export-csv ../timings/add-package.csv \
-            --show-output \
-            --setup 'cp pdm.lock pdm.lock.bak && cp pyproject.toml pyproject.toml.bak' \
-            --prepare 'pdm cache clear && pdm install' \
-            --conclude 'rm -rf .venv __pypackages__ && mkdir __pypackages__ && cp pdm.lock.bak pdm.lock && cp pyproject.toml.bak pyproject.toml' \
-            'pdm add ${ADD_PACKAGE}'
-
-      - name: stats
-        run: |
-          VERSION=`pdm --version | awk '{print $3}'`
-          CSV=pdm/stats.csv
-          TIMESTAMP=$(date +%s)
-          mkdir -p "pdm"
-          echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
-          for stat in "tooling" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
-            # Extract the necessary fields from the timings CSV
-            mean=$(awk -F',' 'NR==2 {printf "%.2f", $2}' timings/$stat.csv)
-            median=$(awk -F',' 'NR==2 {printf "%.2f", $4}' timings/$stat.csv)
-            stddiv=$(awk -F',' 'NR==2 {printf "%.2f", $3}' timings/$stat.csv)
-            min=$(awk -F',' 'NR==2 {printf "%.2f", $7}' timings/$stat.csv)
-            max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' timings/$stat.csv)
-            
-            # Append the formatted data to the stats CSV
-            echo "pdm,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
-          done
-          csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
-
-      - uses: actions/upload-artifact@v4
-        if: github.ref == 'refs/heads/main'
-        with:
-          name: pdm-stats
-          path: pdm/stats.csv
-          retention-days: 10
-
-  uv:
-    runs-on: ubuntu-22.04
-    env:
-      UV_PRERELEASE: allow
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-
-      - name: setup
-        run: ./bin/actions_prereqs.sh
-      
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
-
-      - name: tooling
-        run: |
-          cd uv
-          hyperfine --runs 5 --export-csv ../timings/tooling.csv \
-            --show-output \
-            --conclude 'uv pip uninstall uv' \
-            'uv pip install --no-cache uv'
-        env:
-          UV_SYSTEM_PYTHON: "1"
-
-      - name: import
-        run: |
-          cd uv  
-          uv add --frozen -r ../requirements.txt
-
-      - name: lock cold
-        run: |
-          cd uv
-          hyperfine --runs 5 --export-csv ../timings/lock-cold.csv \
-            --show-output \
-            --setup 'uv cache clean' \
-            --conclude 'rm uv.lock' \
-            'uv lock --no-cache'
-  
-      - name: lock warm
-        run: |
-          cd uv
-          hyperfine --runs 5 --warmup 1 --export-csv ../timings/lock-warm.csv \
-            --show-output \
-            --setup 'uv cache clean' \
-            --conclude 'rm uv.lock' \
-            'uv lock'
-
-      - name: install cold
-        run: |
-          cd uv
-          hyperfine --runs 5 --export-csv ../timings/install-cold.csv \
-            --show-output \
-            --setup 'uv lock' \
-            --prepare 'uv cache clean' \
-            --conclude 'rm -r .venv' \
-            'uv sync'
-
-      - name: install warm
-        run: |
-          cd uv
-          hyperfine --runs 5 --warmup 1 --export-csv ../timings/install-warm.csv \
-            --show-output \
-            --conclude 'rm -r .venv' \
-            'uv sync'
-    
-      - name: update cold
-        run: |
-          cd uv
-          hyperfine --runs 5 --export-csv ../timings/update-cold.csv \
-            --show-output \
-            --setup 'uv sync' \
-            --prepare 'uv cache clean' \
-            'uv sync --upgrade'
-
-      - name: update warm
-        run: |
-          cd uv
-          hyperfine --runs 5 --warmup 1 --export-csv ../timings/update-warm.csv \
-            --show-output \
-            --setup 'uv cache clean' \
-            'uv sync --upgrade'
-
-      - name: add package
-        run: |
-          cd uv
-          hyperfine --runs 5 --export-csv ../timings/add-package.csv \
-            --show-output \
-            --setup 'uv cache clean && cp uv.lock uv.lock.bak && cp pyproject.toml pyproject.toml.bak' \
-            --prepare 'uv cache clean && uv sync' \
-            --conclude 'rm -r .venv && cp uv.lock.bak uv.lock && cp pyproject.toml.bak pyproject.toml' \
-            'uv add ${ADD_PACKAGE}'
-
-      - name: stats
-        run: |
-          VERSION=`uv --version | awk '{print $2}'`
-          CSV=uv/stats.csv
-          TIMESTAMP=$(date +%s)
-          mkdir -p "uv"
-          echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
-          for stat in "tooling" "lock-cold" "lock-warm" "install-cold" "install-warm" "update-cold" "update-warm" "add-package"; do
-            # Extract the necessary fields from the timings CSV
-            mean=$(awk -F',' 'NR==2 {printf "%.2f", $2}' timings/$stat.csv)
-            median=$(awk -F',' 'NR==2 {printf "%.2f", $4}' timings/$stat.csv)
-            stddiv=$(awk -F',' 'NR==2 {printf "%.2f", $3}' timings/$stat.csv)
-            min=$(awk -F',' 'NR==2 {printf "%.2f", $7}' timings/$stat.csv)
-            max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' timings/$stat.csv)
-            
-            # Append the formatted data to the stats CSV
-            echo "uv,$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
-          done
-          csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
-
-      - uses: actions/upload-artifact@v4
-        if: github.ref == 'refs/heads/main'
-        with:
-          name: uv-stats
-          path: uv/stats.csv
-          retention-days: 10
-
-  gather:
-    runs-on: ubuntu-22.04
-    needs: [poetry, pdm, uv]
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/download-artifact@v4
-      - name: build stats.csv
-        run: |
-          # join and remove duplicate headers
-          cat *-stats/stats.csv > raw.csv
-          HEADER=$(head -n 1 raw.csv)
-          echo "$HEADER" > stats.csv
-          grep -v "$HEADER" raw.csv >> stats.csv
-      - uses: actions/upload-artifact@v4
-        with:
-          name: stats
+          name: ${{ matrix.tools.name }}-stats
           path: stats.csv
           retention-days: 10
