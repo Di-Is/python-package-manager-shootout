@@ -95,7 +95,7 @@ jobs:
             --show-output \
             --prepare 'uv venv && uv pip install pipx' \
             --conclude 'rm -r .venv && rm -r ~/.local/pipx' \
-            '.venv/bin/pipx install -r requirements.txt'
+            'cat requirements.txt | .venv/bin/pipx install -'
   
       - name: warm install
         run: |
@@ -103,7 +103,7 @@ jobs:
             --show-output \
             --prepare 'uv venv && uv pip install pipx' \
             --conclude 'rm -r .venv' \
-            '.venv/bin/pipx install -r requirements.txt'
+            'cat requirements.txt | .venv/bin/pipx install -'
 
       - name: stats
         run: |
