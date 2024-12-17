@@ -20,7 +20,7 @@ jobs:
             clean-cache: uv cache clean
             clean-venv: rm -rf .venv
             clean-lock: rm -rf uv.lock
-            import: uv add -r ../requirements.txt
+            import: uv add --frozen -r ../requirements.txt
             lock: uv lock
             sync: uv sync
             update: uv sync --upgrade
@@ -112,8 +112,8 @@ jobs:
           hyperfine --runs 5 --export-csv add-package.csv \
             --show-output \
             --setup '${{ matrix.tools.backup }}' \
-            --prepare '${{ matrix.tools.clean-cache }} && uv sync' \
-            --conclude '${{ matrix.tools.clean-cache }} && ${{ matrix.tools.roleback }}' \
+            --prepare '${{ matrix.tools.clean-cache }} && ${{ matrix.tools.sync }}' \
+            --conclude '${{ matrix.tools.roleback }}' \
             '${{ matrix.tools.add }} ${ADD_PACKAGE}'
 
       - name: stats
