@@ -20,7 +20,7 @@ jobs:
             clean-cache: uv cache clean
             clean-venv: rm -rf .venv
             clean-lock: rm -rf uv.lock
-            import: uv add -r ../requrements.txt
+            import: uv add -r ../requirements.txt
             lock: uv lock
             sync: uv sync
             update: uv symc --update
