@@ -93,7 +93,7 @@ jobs:
           hyperfine --runs 5 --export-csv timings/install-cold.csv \
             --show-output \
             --prepare 'uv venv' \
-            --conclude 'rm -r .venv && uv cache clear' \
+            --conclude 'rm -r .venv && uv cache clean' \
             'uv pip install -r requirements.txt'
   
       - name: warm install
