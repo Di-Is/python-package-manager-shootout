@@ -46,7 +46,7 @@ jobs:
 
       - name: stats
         run: |
-          VERSION=`.venv/bin/pip --version | grep -oP 'pip \K[\d.]+'`
+          VERSION=`uv venv && uv pip install pip && pip --version | grep -oP 'pip \K[\d.]+'`
           CSV=pip/stats.csv
           TIMESTAMP=$(date +%s)
           mkdir -p "pip"
