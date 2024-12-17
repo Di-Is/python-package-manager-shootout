@@ -8,5 +8,3 @@ wget https://github.com/sharkdp/hyperfine/releases/download/v1.19.0/hyperfine_1.
 sudo dpkg -i hyperfine_1.19.0_amd64.deb
 # benchmark setup
 pip --disable-pip-version-check --no-cache-dir install csv2md
-mkdir -p timings
-make requirements.txt
