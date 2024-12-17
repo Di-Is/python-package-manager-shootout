@@ -109,7 +109,7 @@ jobs:
           VERSION=`uv --version | awk '{print $2}'`
           CSV=uv-pip/stats.csv
           TIMESTAMP=$(date +%s)
-          mkdir -p "pip"
+          mkdir -p "uv-pip"
           echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
           for stat in "install-cold" "install-warm"; do
             # Extract the necessary fields from the timings CSV
