@@ -40,7 +40,7 @@ jobs:
           python-version: "3.9"
 
       - name: setup
-        run: ../bin/actions_prereqs.sh
+        run: bin/actions_prereqs.sh
 
       - run: ${{ matrix.tools.install-tool }}
 
