@@ -8,7 +8,6 @@ langsmith
 streamlit
 langchain-openai
 openai
-youtube-transcript-api
 faiss-cpu
 langchainhub
 watchfiles
