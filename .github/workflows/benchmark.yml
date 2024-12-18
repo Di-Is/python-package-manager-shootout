@@ -17,7 +17,8 @@ jobs:
       matrix:
         tools: 
           - name: uv
-            install-tool: ""
+            install-tool: curl -LsSf https://astral.sh/uv/install.sh | sh
+            clean-tool: uv cache clean && rm ~/.local/bin/uv ~/.local/bin/uvx 
             clean-cache: uv cache clean
             clean-venv: rm -rf .venv
             clean-lock: rm -rf uv.lock
@@ -54,9 +55,8 @@ jobs:
         run: |
           hyperfine --runs 5 --export-csv tooling.csv \
             --show-output \
-            --prepare 'uv venv' \
-            --conclude 'rm -r .venv && uv cache clean' \
-            'uv pip install ${{ matrix.tools.name }}'
+            --conclude '${{ matrix.tools.clean-tool }}' \
+            '${{ matrix.tools.install-tool }}'
 
       - name: import
         run: ${{ matrix.tools.import }}
