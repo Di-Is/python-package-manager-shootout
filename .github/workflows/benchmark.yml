@@ -9,6 +9,7 @@ env:
   ADD_PACKAGE: goodconf
   UV_PYTHON_PREFERENCE: only-system
   UV_PRERELEASE: allow
+  NUM_ITER: 1
 
 jobs:
   benchmark:
@@ -53,7 +54,7 @@ jobs:
 
       - name: install tool
         run: |
-          hyperfine --runs 5 --export-csv tooling.csv \
+          hyperfine --runs ${{ env.NUM_ITER }} --export-csv tooling.csv \
             --show-output \
             --conclude '${{ matrix.tools.clean-tool }}' \
             '${{ matrix.tools.install-tool }}'
@@ -63,7 +64,7 @@ jobs:
 
       - name: lock cold
         run: |
-          hyperfine --runs 5 --export-csv lock-cold.csv \
+          hyperfine --runs ${{ env.NUM_ITER }} --export-csv lock-cold.csv \
             --show-output \
             --prepare '${{ matrix.tools.clean-cache }}' \
             --conclude '${{ matrix.tools.clean-lock }}' \
@@ -71,14 +72,14 @@ jobs:
   
       - name: lock warm
         run: |
-          hyperfine --runs 5 --warmup 1 --export-csv lock-warm.csv \
+          hyperfine --runs ${{ env.NUM_ITER }} --warmup 1 --export-csv lock-warm.csv \
             --show-output \
             --conclude '${{ matrix.tools.clean-lock }}' \
             '${{ matrix.tools.lock }}'
 
       - name: install cold
         run: |
-          hyperfine --runs 5 --export-csv install-cold.csv \
+          hyperfine --runs ${{ env.NUM_ITER }} --export-csv install-cold.csv \
             --show-output \
             --setup '${{ matrix.tools.lock }}' \
             --prepare '${{ matrix.tools.clean-cache }}' \
@@ -87,7 +88,7 @@ jobs:
 
       - name: install warm
         run: |
-          hyperfine --runs 5 --warmup 1 --export-csv install-warm.csv \
+          hyperfine --runs ${{ env.NUM_ITER }} --warmup 1 --export-csv install-warm.csv \
             --show-output \
             --setup '${{ matrix.tools.lock }}' \
             --conclude '${{ matrix.tools.clean-venv }}' \
@@ -95,7 +96,7 @@ jobs:
     
       - name: update cold
         run: |
-          hyperfine --runs 5 --export-csv update-cold.csv \
+          hyperfine --runs ${{ env.NUM_ITER }} --export-csv update-cold.csv \
             --show-output \
             --setup '${{ matrix.tools.sync }}' \
             --prepare '${{ matrix.tools.clean-cache }}' \
@@ -103,14 +104,14 @@ jobs:
 
       - name: update warm
         run: |
-          hyperfine --runs 5 --warmup 1 --export-csv update-warm.csv \
+          hyperfine --runs ${{ env.NUM_ITER }} --warmup 1 --export-csv update-warm.csv \
             --show-output \
             --setup '${{ matrix.tools.sync }}' \
             '${{ matrix.tools.update }}'
 
       - name: add package
         run: |
-          hyperfine --runs 5 --export-csv add-package.csv \
+          hyperfine --runs ${{ env.NUM_ITER }} --export-csv add-package.csv \
             --show-output \
             --setup '${{ matrix.tools.backup }}' \
             --prepare '${{ matrix.tools.clean-cache }} && ${{ matrix.tools.sync }}' \
