@@ -60,11 +60,6 @@ jobs:
 
       - name: setup
         run: ../bin/actions_prereqs.sh
-      
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
 
       - name: install tool
         run: |
@@ -72,6 +67,8 @@ jobs:
             --show-output \
             --conclude '${{ matrix.tools.clean-tool }}' \
             '${{ matrix.tools.install-tool }}'
+
+      - run: ${{ matrix.tools.install-tool }}
 
       - name: import
         run: ${{ matrix.tools.import }}
