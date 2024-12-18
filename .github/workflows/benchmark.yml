@@ -11,11 +11,88 @@ env:
   NUM_ITER: 1
 
 jobs:
-  benchmark:
+  classic-benchmark:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        tools: 
+        tools:
+          - name: uv pip
+            install-tool: curl -LsSf https://astral.sh/uv/install.sh | sh
+            clean-cache: uv cache clean
+            clean-venv: rm -rf .venv
+            venv: uv venv
+            install: uv pip install -r requirements.txt 
+            version: uv --version | awk '{print $2}'
+          - name: pip
+            install-tool: ""
+            clean-cache: pip cache purge
+            clean-venv: rm -rf .venv
+            install: .venv/bin/pip install -r requirements.txt
+            venv: python -m venv .venv
+            version: pip --version | grep -oP 'pip \K[\d.]+'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: setup
+        run: ../bin/actions_prereqs.sh
+
+      - run: ${{ matrix.tools.install-tool }}
+
+      - name: import
+        run: ${{ matrix.tools.import }}
+
+      - name: install cold
+        run: |
+          hyperfine --runs ${{ env.NUM_ITER }} --export-csv install-cold.csv \
+            --show-output \
+            --prepare '${{ matrix.tools.venv }} && ${{ matrix.tools.clean-cache }}' \
+            --conclude '${{ matrix.tools.clean-venv }}' \
+            '${{ matrix.tools.install }}'
+  
+      - name: install warm
+        run: |
+          hyperfine --runs ${{ env.NUM_ITER }} --warmup 1 --export-csv install-warm.csv \
+            --show-output \
+            --conclude '${{ matrix.tools.clean-venv }}' \
+            '${{ matrix.tools.install }}'
+      
+      - name: stats
+        run: |
+          VERSION=`${{ matrix.tools.version }}`
+          CSV=stats.csv
+          TIMESTAMP=$(date +%s)
+          echo "tool,version,stat,mean,median,stddiv,min,max" > "$CSV"
+          for stat in "install-cold" "install-warm"; do
+            # Extract the necessary fields from the timings CSV
+            mean=$(awk -F',' 'NR==2 {printf "%.2f", $2}' $stat.csv)
+            median=$(awk -F',' 'NR==2 {printf "%.2f", $4}' $stat.csv)
+            stddiv=$(awk -F',' 'NR==2 {printf "%.2f", $3}' $stat.csv)
+            min=$(awk -F',' 'NR==2 {printf "%.2f", $7}' $stat.csv)
+            max=$(awk -F',' 'NR==2 {printf "%.2f", $8}' $stat.csv)
+            
+            # Append the formatted data to the stats CSV
+            echo "${{ matrix.tools.name }},$VERSION,$stat,$mean,$median,$stddiv,$min,$max" >> "$CSV"
+          done
+          csv2md "$CSV" >> $GITHUB_STEP_SUMMARY
+
+      - uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: ${{ matrix.tools.name }}-stats
+          path: stats.csv
+          retention-days: 10
+
+  modern-benchmark:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        tools:
           - name: uv
             install-tool: curl -LsSf https://astral.sh/uv/install.sh | sh
             clean-tool: rm ~/.local/bin/uv ~/.local/bin/uvx 
@@ -48,7 +125,7 @@ jobs:
             install-tool: curl -sSL https://pdm-project.org/install-pdm.py | python3
             clean-tool: curl -sSL https://pdm-project.org/install-pdm.py | python3 - --remove
             clean-cache: pdm cache clear
-            clean-venv: rm -rf .venv __pypackages__ && mkdir -p __pypackages__
+            clean-venv: rm -rf .venv __pypackages__
             clean-lock: rm -rf pdm.lock
             import: pdm import -f requirements ../requirements.txt && rm -rf pdm.lock
             lock: pdm lock
@@ -92,14 +169,14 @@ jobs:
           hyperfine --runs ${{ env.NUM_ITER }} --export-csv lock-cold.csv \
             --show-output \
             --prepare '${{ matrix.tools.clean-cache }}' \
-            --conclude '${{ matrix.tools.clean-lock }}' \
+            --conclude '${{ matrix.tools.clean-lock }} && ${{ matrix.tools.clean-venv }}' \
             '${{ matrix.tools.lock }}'
   
       - name: lock warm
         run: |
           hyperfine --runs ${{ env.NUM_ITER }} --warmup 1 --export-csv lock-warm.csv \
             --show-output \
-            --conclude '${{ matrix.tools.clean-lock }}' \
+            --conclude '${{ matrix.tools.clean-lock }} && ${{ matrix.tools.clean-venv }}' \
             '${{ matrix.tools.lock }}'
 
       - name: install cold
