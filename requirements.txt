@@ -1,14 +1,1 @@
-langchain-core
-langchain
-langchain-community
-langgraph
-langserve[all]
-langchain-cli
-langsmith
-streamlit
-streamlit-extras
-langchain-openai
-openai
-langchainhub
-watchfiles
-unstructured.pytesseract
+azure-cli
