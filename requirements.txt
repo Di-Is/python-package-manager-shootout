@@ -6,6 +6,7 @@ langserve[all]
 langchain-cli
 langsmith
 streamlit
+streamlit-extra
 langchain-openai
 openai
 langchainhub
