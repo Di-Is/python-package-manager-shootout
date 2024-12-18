@@ -8,7 +8,7 @@ on:
 env:
   ADD_PACKAGE: goodconf
   UV_PYTHON_PREFERENCE: only-system
-  NUM_ITER: 2
+  NUM_ITER: 1
 
 jobs:
   benchmark:
@@ -44,6 +44,20 @@ jobs:
             backup: cp poetry.lock poetry.lock.bak && cp pyproject.toml pyproject.toml.bak
             roleback: cp poetry.lock.bak poetry.lock && cp pyproject.toml.bak pyproject.toml
             version: poetry --version | awk '{print $3}' | tr -d ')'
+          - name: pdm
+            install-tool: curl -sSL https://pdm-project.org/install-pdm.py | python3
+            clean-tool: curl -sSL https://pdm-project.org/install-pdm.py | python3 - --remove
+            clean-cache: pdm cache clear
+            clean-venv: rm -rf .venv __pypackages__ && mkdir -p __pypackages__
+            clean-lock: rm -rf pdm.lock
+            import: pdm import -f requirements ../requirements.txt && rm -rf pdm.lock
+            lock: pdm lock
+            sync: pdm install
+            update: pdm update
+            add: pdm add
+            backup: cp pdm.lock pdm.lock.bak && cp pyproject.toml pyproject.toml.bak
+            roleback: cp pdm.lock.bak pdm.lock && cp pyproject.toml.bak pyproject.toml
+            version: pdm --version | awk '{print $3}'
 
     defaults:
       run:
