@@ -8,8 +8,6 @@ langsmith
 streamlit
 langchain-openai
 openai
-faiss-cpu
 langchainhub
 watchfiles
-transformers
 unstructured.pytesseract
