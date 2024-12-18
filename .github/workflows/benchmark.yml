@@ -8,6 +8,7 @@ on:
 env:
   ADD_PACKAGE: goodconf
   UV_PYTHON_PREFERENCE: only-system
+  UV_PRERELEASE: allow
 
 jobs:
   benchmark:
