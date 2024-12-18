@@ -1,1 +1,8 @@
-azure-cli
+langchain-core
+langchain
+langchain-community
+langgraph
+langserve[all]
+langchain-cli
+langsmith
+streamlit
