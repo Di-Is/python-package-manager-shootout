@@ -59,6 +59,7 @@ jobs:
         run: |
           hyperfine --runs ${{ env.NUM_ITER }} --warmup 1 --export-csv install-warm.csv \
             --show-output \
+            --prepare '${{ matrix.tools.venv }}' \
             --conclude '${{ matrix.tools.clean-venv }}' \
             '${{ matrix.tools.install }}'
       
