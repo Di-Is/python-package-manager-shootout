@@ -19,7 +19,7 @@ jobs:
         tools: 
           - name: uv
             install-tool: curl -LsSf https://astral.sh/uv/install.sh | sh
-            clean-tool: uv cache clean && rm ~/.local/bin/uv ~/.local/bin/uvx 
+            clean-tool: rm ~/.local/bin/uv ~/.local/bin/uvx 
             clean-cache: uv cache clean
             clean-venv: rm -rf .venv
             clean-lock: rm -rf uv.lock
@@ -33,8 +33,8 @@ jobs:
             version: uv --version | awk '{print $2}'
           - name: poetry
             install-tool: pipx install poetry
-            clean-tool: pipx uninstall poetry && rm ~/.local/share/pypoetry 
-            clean-cache: rm ~/.local/share/pypoetry 
+            clean-tool: pipx uninstall poetry
+            clean-cache: rm -rf ~/.local/share/pypoetry 
             clean-venv: poetry env remove --all
             clean-lock: rm -rf poetry.lock
             import: poetry add --allow-prereleases $(sed -e 's/#.*//' -e '/^$$/ d' < ../requirements.txt)
