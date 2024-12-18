@@ -31,6 +31,20 @@ jobs:
             backup: cp uv.lock uv.lock.bak && cp pyproject.toml pyproject.toml.bak
             roleback: cp uv.lock.bak uv.lock && cp pyproject.toml.bak pyproject.toml
             version: uv --version | awk '{print $2}'
+          - name: poetry
+            install-tool: pipx install poetry
+            clean-tool: pipx uninstall poetry && rm ~/.local/share/pypoetry 
+            clean-cache: rm ~/.local/share/pypoetry 
+            clean-venv: poetry env remove --all
+            clean-lock: rm -rf poetry.lock
+            import: poetry add --allow-prereleases $(sed -e 's/#.*//' -e '/^$$/ d' < ../requirements.txt)
+            lock: poetry lock
+            sync: poetry install
+            update: poetry update
+            add: poetry add
+            backup: cp poetry.lock poetry.lock.bak && cp pyproject.toml pyproject.toml.bak
+            roleback: cp poetry.lock.bak poetry.lock && cp pyproject.toml.bak pyproject.toml
+            version: poetry --version | awk '{print $3}' | tr -d ')'
     defaults:
       run:
         working-directory: ./${{ matrix.tools.name }}
