@@ -184,7 +184,7 @@ jobs:
         run: |
           hyperfine --runs ${{ env.NUM_ITER }} --export-csv install-cold.csv \
             --show-output \
-            --setup '${{ matrix.tools.lock }}' \
+            --setup '${{ matrix.tools.lock }} && ${{ matrix.tools.clean-venv }}' \
             --prepare '${{ matrix.tools.clean-cache }}' \
             --conclude '${{ matrix.tools.clean-venv }}' \
             '${{ matrix.tools.sync }}'
@@ -193,7 +193,7 @@ jobs:
         run: |
           hyperfine --runs ${{ env.NUM_ITER }} --warmup 1 --export-csv install-warm.csv \
             --show-output \
-            --setup '${{ matrix.tools.lock }}' \
+            --setup '${{ matrix.tools.lock }} && ${{ matrix.tools.clean-venv }}' \
             --conclude '${{ matrix.tools.clean-venv }}' \
             '${{ matrix.tools.sync }}'
     
