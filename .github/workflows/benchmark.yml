@@ -8,7 +8,7 @@ on:
 env:
   ADD_PACKAGE: goodconf
   UV_PYTHON_PREFERENCE: only-system
-  NUM_ITER: 5
+  NUM_ITER: 1
 
 jobs:
   classic-benchmark:
@@ -110,7 +110,7 @@ jobs:
             version: uv --version | awk '{print $2}'
           - name: poetry
             install-tool: pipx install poetry
-            clean-tool: pipx uninstall poetry
+            clean-tool: pipx uninstall poetry && rm -rf ~/.local/pipx
             clean-cache: poetry cache clear --all .
             clean-venv: poetry env remove --all
             clean-lock: rm -rf poetry.lock
