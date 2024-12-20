@@ -111,7 +111,7 @@ jobs:
           - name: poetry
             install-tool: pipx install poetry
             clean-tool: pipx uninstall poetry && rm -rf ~/.local/pipx
-            clean-cache: poetry cache clear --all .
+            clean-cache: rm -rf ~/.cache/pypoetry
             clean-venv: poetry env remove --all
             clean-lock: rm -rf poetry.lock
             import: poetry add --lock $(sed -e 's/#.*//' -e '/^$$/ d' < ../requirements.txt) && rm -rf poetry.lock
