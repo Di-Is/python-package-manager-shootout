@@ -8,7 +8,7 @@ on:
 env:
   ADD_PACKAGE: goodconf
   UV_PYTHON_PREFERENCE: only-system
-  NUM_ITER: 1
+  NUM_ITER: 5
 
 jobs:
   classic-benchmark:
