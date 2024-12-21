@@ -16,9 +16,6 @@ jobs:
         exclude:
           - method: introduce
             cache: cache
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,13 +34,10 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: benchmark
-        shell: bash
         run: |
           uv run benchmark.py --tool ${{ matrix.tool }} --method ${{ matrix.method }} --${{ matrix.cache }}
           mkdir ${{ matrix.tool }}-${{ matrix.method }}-${{ matrix.cache }}
           mv stats.csv ${{ matrix.tool }}-${{ matrix.method }}-${{ matrix.cache }}
-        env:
-          SHELL: /bin/bash
 
       - uses: actions/upload-artifact@v4
         with:

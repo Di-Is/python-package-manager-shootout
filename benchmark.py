@@ -217,7 +217,7 @@ def cli(args: Args) -> None:
                 else:
                     shutil.copy2(src_path, f"{temp_dir}/{item}")
 
-        os.unsetenv("VIRTUAL_ENV")
+        del os.environ["VIRTUAL_ENV"]
         subprocess.run(
             [
                 "hyperfine",
