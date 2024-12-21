@@ -237,6 +237,7 @@ def cli(args: Args) -> None:
                 cmd.target,
                 "--shell",
                 "bash",
+                os.environ,
             ]
             + (["--warmup", "1"] if args.cache else []),
             check=True,
