@@ -196,7 +196,7 @@ class Args(BaseModel):
 
     tool: Literal["uv", "poetry", "pdm"]
     method: Literal["introduce", "lock", "install", "update", "add"]
-    cache: bool = False
+    cache: bool
 
 
 @click.command()

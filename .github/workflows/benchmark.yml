@@ -12,7 +12,10 @@ jobs:
       matrix:
         tool: ["uv", "poetry", "pdm"]
         method: ["introduce", "lock", "install", "update", "add"]
-        cache: [true, false]
+        cache: ["cache", "no-cache"]
+        exclude:
+          - method: introduce
+            cache: cache
 
     steps:
       - name: Checkout
@@ -33,7 +36,7 @@ jobs:
 
       - name: benchmark
         run: |
-          uv run benchmark.py --tool ${{ matrix.tool }} --method ${{ matrix.method }} --cache ${{ matrix.cache }}
+          uv run benchmark.py --tool ${{ matrix.tool }} --method ${{ matrix.method }} --${{ matrix.cache }}
           mkdir ${{ matrix.tool }}-${{ matrix.method }}-${{ matrix.cache }}
           mv stats.csv ${{ matrix.tool }}-${{ matrix.method }}-${{ matrix.cache }}
 
