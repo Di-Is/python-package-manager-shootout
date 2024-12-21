@@ -94,11 +94,11 @@ class ModernBenchmarkCMD:
     def version(self) -> CMD:
         return CMD(
             **{
-                "setup": self._tool.setup,
+                "setup": f"{self._tool.setup} && {self._tool.install_tool}",
                 "prepare": "",
                 "target": self._tool.version,
                 "conclude": "",
-                "cleanup": self._tool.cleanup,
+                "cleanup": f"{self._tool.uninstall_tool} && {self._tool.cleanup}",
             }
         )
 
@@ -122,7 +122,7 @@ class Uv:
     install: str = "bin/uv sync"
     update: str = "bin/uv sync --upgrade"
     add: str = f"bin/uv add {ADD_PACKAGE}"
-    version: str = "uv --version | awk '{print $2}'"
+    version: str = "/bin/uv --version | awk '{print $2}'"
 
 
 class Poetry:
@@ -226,6 +226,8 @@ def cli(args: Args) -> None:
                     if "uv/archive-v0" not in item
                 ]
             )
+        print(os.environ)
+
         subprocess.run(
             [
                 "hyperfine",
@@ -249,7 +251,7 @@ def cli(args: Args) -> None:
             + (["--warmup", "1"] if args.cache else []),
             check=True,
             cwd=temp_dir,
-            env=os.environ,
+            env=dict(os.environ),
         )
 
         # get version
@@ -262,6 +264,7 @@ def cli(args: Args) -> None:
             capture_output=True,
             text=True,
             cwd=temp_dir,
+            check=True,
         ).stdout.strip()
 
         with open(f"{temp_dir}/stats.csv", "r", encoding="utf-8") as src:
