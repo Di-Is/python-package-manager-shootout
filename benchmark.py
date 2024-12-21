@@ -218,7 +218,7 @@ def cli(args: Args) -> None:
                     shutil.copy2(src_path, f"{temp_dir}/{item}")
 
         del os.environ["VIRTUAL_ENV"]
-        if "uv/archive-v0" in os.environ["PATH"]:
+        if "archive-v0/" in os.environ["PATH"]:
             os.environ["PATH"] = ":".join(
                 [
                     item
