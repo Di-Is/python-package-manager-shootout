@@ -42,6 +42,8 @@ jobs:
           uv run benchmark.py --tool ${{ matrix.tool }} --method ${{ matrix.method }} --${{ matrix.cache }}
           mkdir ${{ matrix.tool }}-${{ matrix.method }}-${{ matrix.cache }}
           mv stats.csv ${{ matrix.tool }}-${{ matrix.method }}-${{ matrix.cache }}
+        env:
+          SHELL: /bin/bash
 
       - uses: actions/upload-artifact@v4
         with:
