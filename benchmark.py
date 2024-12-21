@@ -235,6 +235,8 @@ def cli(args: Args) -> None:
                 "--cleanup",
                 cmd.cleanup,
                 cmd.target,
+                "--shell",
+                "bash",
             ]
             + (["--warmup", "1"] if args.cache else []),
             check=True,
