@@ -25,34 +25,27 @@ google-cloud-functions
 google-cloud-kms
 google-cloud-pubsub
 google-cloud-spanner
-google-cloud-storage
 googleapis-common-protos
-google-crc32c
 grpc-google-iam-v1
 isodate
 jsonschema
 lxml
-maxminddb
 mistune
 mmh3
 packaging
 parsimonious
-petname
 phonenumberslite
 Pillow
 progressbar2
 protobuf
 proto-plus
-python-rapidjson
 psutil
 psycopg2-binary
 PyJWT
 pydantic
 python-dateutil
 pymemcache
-python-u2flib-server
 fido2
-python3-saml
 PyYAML
 rb
 redis-py-cluster
@@ -64,9 +57,7 @@ rfc3339-validator
 rfc3986-validator
 # [end] jsonschema format validators
 sentry-arroyo
-sentry-kafka-schemas
-sentry-ophio
-sentry-protos
+# sentry-ophio
 sentry-redis-tools
 sentry-relay
 sentry-sdk[http2]
