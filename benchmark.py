@@ -226,7 +226,6 @@ def cli(args: Args) -> None:
                     if "/archive-v0/" not in item
                 ]
             )
-        print(os.environ)
 
         subprocess.run(
             [
@@ -256,16 +255,20 @@ def cli(args: Args) -> None:
 
         # get version
         cmd = command_factory(args.tool, "version", args.cache)
-        version = subprocess.run(
-            [
-                f"{cmd.setup} > /dev/null 2>&1 && {cmd.target} && {cmd.cleanup} > /dev/null 2>&1"
-            ],
-            shell=True,
-            capture_output=True,
-            text=True,
-            cwd=temp_dir,
-            check=True,
-        ).stdout.strip()
+        version = (
+            subprocess.run(
+                [
+                    f"{cmd.setup} > /dev/null 2>&1 && {cmd.target} && {cmd.cleanup} > /dev/null 2>&1"
+                ],
+                shell=True,
+                capture_output=True,
+                text=True,
+                cwd=temp_dir,
+                check=True,
+            )
+            .stdout.strip()
+            .splitlines()[0]
+        )
 
         with open(f"{temp_dir}/stats.csv", "r", encoding="utf-8") as src:
             reader = csv.reader(src)

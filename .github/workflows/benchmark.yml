@@ -59,7 +59,6 @@ jobs:
           CSV_FILES=$(ls artifacts/*/*.csv)
           HEADER=$(head -n 1 $(echo $CSV_FILES | awk '{print $1}'))
           echo $HEADER > combined.csv
-
           for FILE in $CSV_FILES; do
             tail -n +2 $FILE >> combined.csv
           done
@@ -75,11 +74,7 @@ jobs:
         id: csv-table-output
         with:
           csvinput: ${{ steps.csv.outputs.content }}
+      
+      - name: output
+        run: echo '${{steps.csv-table-output.outputs.markdown-table}}' >> $GITHUB_STEP_SUMMARY
 
-      # - uses: mshick/add-pr-comment@v1
-      #   with:
-      #     message: |
-      #       ${{steps.csv-table-output.outputs.markdown-table}}
-      #     repo-token: ${{ secrets.GITHUB_TOKEN }}
-      #     repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
-      #     allow-repeats: true
