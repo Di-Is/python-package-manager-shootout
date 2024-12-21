@@ -13,9 +13,6 @@ jobs:
         tool: ["uv", "poetry", "pdm"]
         method: ["introduce", "lock", "install", "update", "add"]
         cache: [true, false]
-    defaults:
-      run:
-        working-directory: ./${{ matrix.tool }}
 
     steps:
       - name: Checkout
