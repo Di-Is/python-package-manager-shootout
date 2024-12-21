@@ -57,7 +57,7 @@ rfc3339-validator
 rfc3986-validator
 # [end] jsonschema format validators
 sentry-arroyo
-# sentry-ophio
+sentry-ophio
 sentry-redis-tools
 sentry-relay
 sentry-sdk[http2]
