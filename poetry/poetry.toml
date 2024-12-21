@@ -1,0 +1,3 @@
+cache-dir = "~/.cache/pypoetry"
+virtualenvs.in-project = true
+virtualenvs.path = ".venv"
