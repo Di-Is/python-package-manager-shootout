@@ -37,6 +37,7 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: benchmark
+        shell: bash
         run: |
           uv run benchmark.py --tool ${{ matrix.tool }} --method ${{ matrix.method }} --${{ matrix.cache }}
           mkdir ${{ matrix.tool }}-${{ matrix.method }}-${{ matrix.cache }}
