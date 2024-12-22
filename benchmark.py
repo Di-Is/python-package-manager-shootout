@@ -367,7 +367,6 @@ def cli(args: Args) -> None:
                 [item for item in envs["PATH"].split(":") if "/archive-v0/" not in item]
             )
         envs |= tool_envs
-        print(envs)
         subprocess.run(
             [
                 "hyperfine",
@@ -405,7 +404,7 @@ def cli(args: Args) -> None:
             text=True,
             shell=True,
             check=True,
-        ).stderr.strip()
+        ).stdout.strip()
         subprocess.run(cmd.conclude, shell=True, cwd=temp_dir)
         subprocess.run(cmd.cleanup, shell=True, cwd=temp_dir)
 
