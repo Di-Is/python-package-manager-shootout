@@ -258,16 +258,16 @@ def cli(args: Args) -> None:
 
         # get version
         cmd = command_factory(args.tool, "version", args.cache)
+        subprocess.run(cmd.setup, shell=True, cwd=temp_dir)
         version = subprocess.run(
-            [
-                f"{cmd.setup} &>/dev/null && {cmd.target} 2>/dev/null && {cmd.cleanup} &>/dev/null"
-            ],
-            shell=True,
+            cmd.target,
             capture_output=True,
-            text=True,
             cwd=temp_dir,
+            text=True,
+            shell=True,
             check=True,
-        ).stdout.splitlines()[0]
+        ).stdout.strip()
+        subprocess.run(cmd.cleanup, shell=True, cwd=temp_dir)
 
         with open(f"{temp_dir}/stats.csv", "r", encoding="utf-8") as src:
             reader = csv.reader(src)
