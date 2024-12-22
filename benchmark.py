@@ -127,7 +127,7 @@ class Uv:
 
 class Poetry:
     name: str = "poetry"
-    clean_cache: str = "rm -rf ~/.cache/pypoetry"
+    clean_cache: str = "rm -rf .cache"
     clean_introduce_cache: str = "rm -rf ~/.local/pipx"
     clean_venv: str = "rm -r .venv"
     setup: str = f"uv tool install --python {PYTHON_VERSION} pipx"
