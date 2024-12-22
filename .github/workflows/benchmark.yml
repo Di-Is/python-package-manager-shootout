@@ -47,7 +47,7 @@ jobs:
   
   aggregate-csv:
     needs: modern-benchmark
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Download all CSV artifacts
         uses: actions/download-artifact@v4
@@ -63,20 +63,10 @@ jobs:
             tail -n +2 $FILE >> combined-stats.csv
           done
 
-      - name: Read CSV
-        id: csv
-        uses: juliangruber/read-file-action@v1
-        with:
-          path: ./combined-stats.csv
+      - name: install uv
+        uses: astral-sh/setup-uv@v4
 
-      - name: Create MD
-        uses: petems/csv-to-md-table-action@master
-        id: csv-table-output
-        with:
-          csvinput: ${{ steps.csv.outputs.content }}
-      
-      - name: output
-        run: echo '${{steps.csv-table-output.outputs.markdown-table}}' >> $GITHUB_STEP_SUMMARY
+      - run: uvx csv2md combined-stats.csv >> $GITHUB_STEP_SUMMARY
 
       - uses: actions/upload-artifact@v4
         with:
