@@ -15,7 +15,6 @@ from pydanclick import from_pydantic
 from pydantic import BaseModel
 
 PYTHON_VERSION = "3.9"
-NUM_ITER = "1"
 ADD_PACKAGE = "goodconf"
 
 
@@ -122,7 +121,7 @@ class Uv:
     install: str = "bin/uv sync"
     update: str = "bin/uv sync --upgrade"
     add: str = f"bin/uv add {ADD_PACKAGE}"
-    version: str = "/bin/uv --version | awk '{print $2}'"
+    version: str = "bin/uv --version | awk '{print $2}'"
 
 
 class Poetry:
@@ -196,11 +195,15 @@ class Args(BaseModel):
 
     tool: Literal["uv", "poetry", "pdm"]
     method: Literal["introduce", "lock", "install", "update", "add"]
+    num_iter: int = 5
     cache: bool
 
 
 @click.command()
-@from_pydantic(Args)
+@from_pydantic(
+    Args,
+    shorten={"tool": "-t", "method": "-m", "num_iter": "-n"},
+)
 def cli(args: Args) -> None:
     cmd = command_factory(args.tool, args.method, args.cache)
     import os
@@ -234,7 +237,7 @@ def cli(args: Args) -> None:
                 "--export-csv",
                 "stats.csv",
                 "--runs",
-                NUM_ITER,
+                f"{args.num_iter}",
                 "--setup",
                 cmd.setup,
                 "--prepare",
@@ -250,25 +253,21 @@ def cli(args: Args) -> None:
             + (["--warmup", "1"] if args.cache else []),
             check=True,
             cwd=temp_dir,
-            env=dict(os.environ),
+            env=os.environ,
         )
 
         # get version
         cmd = command_factory(args.tool, "version", args.cache)
-        version = (
-            subprocess.run(
-                [
-                    f"{cmd.setup} > /dev/null 2>&1 && {cmd.target} && {cmd.cleanup} > /dev/null 2>&1"
-                ],
-                shell=True,
-                capture_output=True,
-                text=True,
-                cwd=temp_dir,
-                check=True,
-            )
-            .stdout.strip()
-            .splitlines()[0]
-        )
+        version = subprocess.run(
+            [
+                f"{cmd.setup} &>/dev/null && {cmd.target} 2>/dev/null && {cmd.cleanup} &>/dev/null"
+            ],
+            shell=True,
+            capture_output=True,
+            text=True,
+            cwd=temp_dir,
+            check=True,
+        ).stdout.splitlines()[0]
 
         with open(f"{temp_dir}/stats.csv", "r", encoding="utf-8") as src:
             reader = csv.reader(src)
@@ -289,7 +288,6 @@ def cli(args: Args) -> None:
                     writer = csv.writer(dest)
                     writer.writerows(data_rows)
             else:
-                # stats.csv が存在しない場合は丸ごとコピー
                 with open(destination_file, "w", encoding="utf-8", newline="") as dest:
                     writer = csv.writer(dest)
                     header = rows[0]
