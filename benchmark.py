@@ -47,7 +47,7 @@ class ModernBenchmarkCMD:
         clean_cache = "true" if cache else self._tool.clean_cache
         return CMD(
             **{
-                "setup": f"{self._tool.setup} && {self._tool.install_tool} && {self._tool.import_dependency} && {self._tool.clean_cache}",
+                "setup": f"{self._tool.setup} && {self._tool.install_tool} && {self._tool.import_dependency} && {self._tool.clean_lock} && {self._tool.clean_cache}",
                 "prepare": "",
                 "target": self._tool.lock,
                 "conclude": f"{self._tool.clean_lock} && {self._tool.clean_venv} && {clean_cache}",
@@ -59,7 +59,7 @@ class ModernBenchmarkCMD:
         clean_cache = "true" if cache else self._tool.clean_cache
         return CMD(
             **{
-                "setup": f"{self._tool.setup} && {self._tool.install_tool} && {self._tool.import_dependency} && {self._tool.lock} && {self._tool.clean_cache}",
+                "setup": f"{self._tool.setup} && {self._tool.install_tool} && {self._tool.import_dependency} && {self._tool.lock} && {self._tool.clean_venv} && {self._tool.clean_cache}",
                 "prepare": "",
                 "target": self._tool.install,
                 "conclude": f"{self._tool.clean_venv} && {clean_cache}",
@@ -117,6 +117,7 @@ class Uv:
     cleanup: str = "true"
     lock_file: str = "uv.lock"
     import_dependency: str = "bin/uv add --frozen -r requirements.txt"
+    envs = {}
     # tool command
     lock: str = "bin/uv lock"
     install: str = "bin/uv sync"
@@ -129,7 +130,7 @@ class Poetry:
     name: str = "poetry"
     clean_cache: str = "rm -rf .cache"
     clean_introduce_cache: str = "rm -rf ~/.local/pipx"
-    clean_venv: str = "rm -r .venv"
+    clean_venv: str = "rm -rf .venv"
     setup: str = f"uv tool install --python {PYTHON_VERSION} pipx"
     cleanup: str = "uv tool uninstall pipx"
     install_tool: str = "uvx pipx install poetry"
@@ -137,6 +138,7 @@ class Poetry:
     clean_lock: str = "rm -rf poetry.lock"
     lock_file: str = "poetry.lock"
     import_dependency: str = "uv run --no-project import_dependency.py"
+    envs = {}
     # tool command
     lock: str = "poetry lock"
     install: str = "poetry install"
@@ -149,7 +151,7 @@ class Pdm:
     name: str = "pdm"
     clean_cache: str = "rm -rf ~/.cache/pdm"
     clean_introduce_cache: str = "rm -rf ~/.local/pipx"
-    clean_venv: str = "rm -r .venv"
+    clean_venv: str = "rm -rf .venv"
     setup: str = f"uv tool install --python {PYTHON_VERSION} pipx"
     cleanup: str = "uv tool uninstall pipx"
     install_tool: str = "uvx pipx install pdm"
@@ -157,12 +159,37 @@ class Pdm:
     clean_lock: str = "rm -rf pdm.lock"
     lock_file: str = "pdm.lock"
     import_dependency: str = "pdm import -f requirements requirements.txt"
+    envs = {}
     # tool command
     lock: str = "pdm lock"
     install: str = "pdm install"
     update: str = "pdm update"
     add: str = f"pdm add {ADD_PACKAGE}"
     version: str = "pdm --version | awk '{print $3}'"
+
+
+class Pipenv:
+    name: str = "pipenv"
+    clean_cache: str = "rm -rf /tmp/.cache/pipenv"
+    clean_introduce_cache: str = "rm -rf ~/.local/pipx"
+    clean_venv: str = "rm -rf .venv"
+    setup: str = f"uv tool install --python {PYTHON_VERSION} pipx"
+    cleanup: str = "uv tool uninstall pipx"
+    install_tool: str = "uvx pipx install pipenv"
+    uninstall_tool: str = "uvx pipx uninstall pipenv"
+    clean_lock: str = "rm -rf Pipfile.lock"
+    lock_file: str = "Pipfile.lock"
+    import_dependency: str = "pipenv install -r requirements.txt"
+    envs: dict = {
+        "PIPENV_VENV_IN_PROJECT": "true",
+        "PIPENV_CACHE_DIR": "/tmp/.cache/pipenv",
+    }
+    # tool command
+    lock: str = "pipenv lock"
+    install: str = "pipenv sync"
+    update: str = "pipenv update"
+    add: str = f"pipenv install {ADD_PACKAGE}"
+    version: str = "pipenv --version | awk '{print $3}'"
 
 
 def command_factory(tool: str, method: str, cache: bool) -> CMD:
@@ -172,6 +199,8 @@ def command_factory(tool: str, method: str, cache: bool) -> CMD:
         tool = Uv()
     elif tool == "pdm":
         tool = Pdm()
+    elif tool == "pipenv":
+        tool = Pipenv()
 
     cmder = ModernBenchmarkCMD(tool)
 
@@ -191,10 +220,22 @@ def command_factory(tool: str, method: str, cache: bool) -> CMD:
     return cmd
 
 
+def env_factory(tool: str) -> dict:
+    if tool == "poetry":
+        tool = Poetry()
+    elif tool == "uv":
+        tool = Uv()
+    elif tool == "pdm":
+        tool = Pdm()
+    elif tool == "pipenv":
+        tool = Pipenv()
+    return tool.envs
+
+
 class Args(BaseModel):
     """Script argument."""
 
-    tool: Literal["uv", "poetry", "pdm"]
+    tool: Literal["uv", "poetry", "pdm", "pipenv"]
     method: Literal["introduce", "lock", "install", "update", "add"]
     num_iter: int = 5
     output_file: str = "stats.csv"
@@ -208,6 +249,7 @@ class Args(BaseModel):
 )
 def cli(args: Args) -> None:
     cmd = command_factory(args.tool, args.method, args.cache)
+    tool_envs = env_factory(args.tool)
     import os
     import shutil
 
@@ -222,16 +264,16 @@ def cli(args: Args) -> None:
                 else:
                     shutil.copy2(src_path, f"{temp_dir}/{item}")
 
-        del os.environ["VIRTUAL_ENV"]
-        del os.environ["UV_CACHE_DIR"]
-        if "/archive-v0/" in os.environ["PATH"]:
-            os.environ["PATH"] = ":".join(
-                [
-                    item
-                    for item in os.environ["PATH"].split(":")
-                    if "/archive-v0/" not in item
-                ]
+        envs = os.environ.copy()
+        if "VIRTUAL_ENV" in envs:
+            del envs["VIRTUAL_ENV"]
+        if "UV_CACHE_DIR" in envs:
+            del envs["UV_CACHE_DIR"]
+        if "/archive-v0/" in envs["PATH"]:
+            envs["PATH"] = ":".join(
+                [item for item in envs["PATH"].split(":") if "/archive-v0/" not in item]
             )
+        envs |= tool_envs
 
         subprocess.run(
             [
@@ -256,7 +298,7 @@ def cli(args: Args) -> None:
             + (["--warmup", "1"] if args.cache else []),
             check=True,
             cwd=temp_dir,
-            env=os.environ,
+            env=envs,
         )
 
         # get version
