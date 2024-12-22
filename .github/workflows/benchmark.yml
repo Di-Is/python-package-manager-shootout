@@ -57,6 +57,9 @@ jobs:
         with:
           path: ./artifacts
 
+      - name: install uv
+        uses: astral-sh/setup-uv@v4
+
       - name: Combine CSV files
         run: |
           CSV_FILES=$(ls artifacts/*/*.csv)
@@ -66,9 +69,6 @@ jobs:
             tail -n +2 $FILE >> combined-stats.csv
           done
           uv run script/custom_sort.py combined-stats.csv
-
-      - name: install uv
-        uses: astral-sh/setup-uv@v4
 
       - run: uvx csv2md combined-stats.csv >> $GITHUB_STEP_SUMMARY
 
