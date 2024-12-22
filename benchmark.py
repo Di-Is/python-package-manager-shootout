@@ -83,10 +83,10 @@ class ModernBenchmarkCMD:
         clean_cache = "true" if cache else self._tool.clean_cache
         return CMD(
             **{
-                "setup": f"{self._tool.setup} && {self._tool.install_tool} && {self._tool.import_dependency} && {self._tool.install} && cp pyproject.toml{{,.bak}} && cp {self._tool.lock_file}{{,.bak}}",
+                "setup": f"{self._tool.setup} && {self._tool.install_tool} && {self._tool.import_dependency} && {self._tool.install} && cp {self._tool.pkg_file}{{,.bak}} && cp {self._tool.lock_file}{{,.bak}}",
                 "prepare": f"{self._tool.install} && {clean_cache}",
                 "target": self._tool.add,
-                "conclude": f"{self._tool.clean_venv} && cp pyproject.toml{{.bak,}} && cp {self._tool.lock_file}{{.bak,}} && {clean_cache}",
+                "conclude": f"{self._tool.clean_venv} && cp {self._tool.pkg_file}{{.bak,}} && cp {self._tool.lock_file}{{.bak,}} && {clean_cache}",
                 "cleanup": f"{self._tool.uninstall_tool} && {self._tool.cleanup}",
             }
         )
@@ -116,6 +116,7 @@ class Uv:
     setup: str = "true"
     cleanup: str = "true"
     lock_file: str = "uv.lock"
+    pkg_file: str = "pyproject.toml"
     import_dependency: str = "bin/uv add --frozen -r requirements.txt"
     envs = {}
     # tool command
@@ -137,6 +138,7 @@ class Poetry:
     uninstall_tool: str = "uvx pipx uninstall poetry"
     clean_lock: str = "rm -rf poetry.lock"
     lock_file: str = "poetry.lock"
+    pkg_file: str = "pyproject.toml"
     import_dependency: str = "uv run --no-project import_dependency.py"
     envs = {}
     # tool command
@@ -158,6 +160,7 @@ class Pdm:
     uninstall_tool: str = "uvx pipx uninstall pdm"
     clean_lock: str = "rm -rf pdm.lock"
     lock_file: str = "pdm.lock"
+    pkg_file: str = "pyproject.toml"
     import_dependency: str = "pdm import -f requirements requirements.txt"
     envs = {}
     # tool command
@@ -178,6 +181,7 @@ class Pipenv:
     install_tool: str = "uvx pipx install pipenv"
     uninstall_tool: str = "uvx pipx uninstall pipenv"
     clean_lock: str = "rm -rf Pipfile.lock"
+    pkg_file: str = "Pipfile"
     lock_file: str = "Pipfile.lock"
     import_dependency: str = "pipenv install -r requirements.txt"
     envs: dict = {
