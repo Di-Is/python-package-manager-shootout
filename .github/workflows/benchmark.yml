@@ -13,12 +13,28 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        tool: ["uv", "poetry", "pdm", "pipenv"]
+        tool: ["uv", "poetry", "pdm", "pipenv", "uv-pip", "pip"]
         method: ["introduce", "lock", "install", "update", "add"]
         cache: ["cache", "no-cache"]
         exclude:
           - method: introduce
             cache: cache
+          - tool: pip
+            method: "introduce"
+          - tool: uv-pip
+            method: "introduce"      
+          - tool: pip
+            method: "lock"
+          - tool: uv-pip
+            method: "lock"   
+          - tool: pip
+            method: "update"
+          - tool: uv-pip
+            method: "update"   
+          - tool: pip
+            method: "add"
+          - tool: uv-pip
+            method: "add"
     steps:
       - name: Checkout
         uses: actions/checkout@v4

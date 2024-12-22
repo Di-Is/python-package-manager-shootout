@@ -48,7 +48,7 @@ class ModernBenchmarkCMD:
         return CMD(
             **{
                 "setup": f"{self._tool.setup} && {self._tool.install_tool} && {self._tool.import_dependency} && {self._tool.clean_lock} && {self._tool.clean_cache}",
-                "prepare": "",
+                "prepare": self._tool.create_venv,
                 "target": self._tool.lock,
                 "conclude": f"{self._tool.clean_lock} && {self._tool.clean_venv} && {clean_cache}",
                 "cleanup": f"{self._tool.uninstall_tool} && {self._tool.cleanup}",
@@ -60,7 +60,7 @@ class ModernBenchmarkCMD:
         return CMD(
             **{
                 "setup": f"{self._tool.setup} && {self._tool.install_tool} && {self._tool.import_dependency} && {self._tool.lock} && {self._tool.clean_venv} && {self._tool.clean_cache}",
-                "prepare": "",
+                "prepare": self._tool.create_venv,
                 "target": self._tool.install,
                 "conclude": f"{self._tool.clean_venv} && {clean_cache}",
                 "cleanup": f"{self._tool.uninstall_tool} && {self._tool.cleanup}",
@@ -72,7 +72,7 @@ class ModernBenchmarkCMD:
         return CMD(
             **{
                 "setup": f"{self._tool.setup} && {self._tool.install_tool} && {self._tool.import_dependency}",
-                "prepare": f"{self._tool.install} && {clean_cache}",
+                "prepare": f"{self._tool.create_venv} && {self._tool.install} && {clean_cache}",
                 "target": self._tool.update,
                 "conclude": f"{self._tool.clean_venv} && {clean_cache}",
                 "cleanup": f"{self._tool.uninstall_tool} && {self._tool.cleanup}",
@@ -84,7 +84,7 @@ class ModernBenchmarkCMD:
         return CMD(
             **{
                 "setup": f"{self._tool.setup} && {self._tool.install_tool} && {self._tool.import_dependency} && {self._tool.install} && cp {self._tool.pkg_file}{{,.bak}} && cp {self._tool.lock_file}{{,.bak}}",
-                "prepare": f"{self._tool.install} && {clean_cache}",
+                "prepare": f"{self._tool.create_venv} && {self._tool.install} && {clean_cache}",
                 "target": self._tool.add,
                 "conclude": f"{self._tool.clean_venv} && cp {self._tool.pkg_file}{{.bak,}} && cp {self._tool.lock_file}{{.bak,}} && {clean_cache}",
                 "cleanup": f"{self._tool.uninstall_tool} && {self._tool.cleanup}",
@@ -95,12 +95,16 @@ class ModernBenchmarkCMD:
         return CMD(
             **{
                 "setup": f"{self._tool.setup} && {self._tool.install_tool}",
-                "prepare": "",
+                "prepare": self._tool.create_venv,
                 "target": self._tool.version,
-                "conclude": "",
+                "conclude": self._tool.clean_venv,
                 "cleanup": f"{self._tool.uninstall_tool} && {self._tool.cleanup}",
             }
         )
+
+
+class Tool:
+    name: str
 
 
 class Uv:
@@ -113,6 +117,7 @@ class Uv:
         'curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="./bin/" sh'
     )
     uninstall_tool: str = "rm -r bin"
+    create_venv: str = "true"
     setup: str = "true"
     cleanup: str = "true"
     lock_file: str = "uv.lock"
@@ -136,6 +141,7 @@ class Poetry:
     cleanup: str = "uv tool uninstall pipx"
     install_tool: str = "uvx pipx install poetry"
     uninstall_tool: str = "uvx pipx uninstall poetry"
+    create_venv: str = "true"
     clean_lock: str = "rm -rf poetry.lock"
     lock_file: str = "poetry.lock"
     pkg_file: str = "pyproject.toml"
@@ -158,6 +164,7 @@ class Pdm:
     cleanup: str = "uv tool uninstall pipx"
     install_tool: str = "uvx pipx install pdm"
     uninstall_tool: str = "uvx pipx uninstall pdm"
+    create_venv: str = "true"
     clean_lock: str = "rm -rf pdm.lock"
     lock_file: str = "pdm.lock"
     pkg_file: str = "pyproject.toml"
@@ -181,6 +188,7 @@ class Pipenv:
     install_tool: str = "uvx pipx install pipenv"
     uninstall_tool: str = "uvx pipx uninstall pipenv"
     clean_lock: str = "rm -rf Pipfile.lock"
+    create_venv: str = "true"
     pkg_file: str = "Pipfile"
     lock_file: str = "Pipfile.lock"
     import_dependency: str = "pipenv install -r requirements.txt"
@@ -196,6 +204,81 @@ class Pipenv:
     version: str = "pipenv --version | awk '{print $3}'"
 
 
+class UvPip:
+    name: str = "uv-pip"
+    clean_introduce_cache: str = "true"
+    clean_cache: str = "rm -rf .cache"
+    clean_venv: str = "rm -rf .venv"
+    clean_lock: str = "true"
+    install_tool: str = (
+        'curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="./bin/" sh'
+    )
+    uninstall_tool: str = "rm -r bin"
+    create_venv: str = "uv venv"
+    setup: str = "true"
+    cleanup: str = "true"
+    lock_file: str = "requirements.txt"
+    pkg_file: str = "requirements.txt"
+    import_dependency: str = "true"
+    envs = {"UV_CACHE_DIR": ".cache"}
+    # tool command
+    lock: str = "true"
+    install: str = "bin/uv pip install -r requirements.txt"
+    update: str = "true"
+    add: str = "true"
+    version: str = "bin/uv --version | awk '{print $2}'"
+
+
+class Pip:
+    name: str = "pip"
+    clean_introduce_cache: str = "true"
+    clean_cache: str = "rm -rf .cache"
+    clean_venv: str = "rm -rf .venv"
+    clean_lock: str = "true"
+    install_tool: str = (
+        'curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="./bin/" sh'
+    )
+    uninstall_tool: str = "rm -r bin"
+    create_venv: str = "uv venv && uv pip install pip"
+    setup: str = "true"
+    cleanup: str = "true"
+    lock_file: str = "requirements.txt"
+    pkg_file: str = "requirements.txt"
+    import_dependency: str = "true"
+    envs = {"PIP_CACHE_DIR": ".cache"}
+    # tool command
+    lock: str = "true"
+    install: str = ".venv/bin/pip install -r requirements.txt"
+    update: str = "true"
+    add: str = "true"
+    version: str = ".venv/bin/pip --version | awk '{print $2}'"
+
+
+# class Piptools:
+#     name: str = "pip-tools"
+#     clean_cache: str = "rm -rf /tmp/.cache/piptools"
+#     clean_introduce_cache: str = "rm -rf ~/.local/pipx"
+#     clean_venv: str = "rm -rf .venv"
+#     setup: str = f"uv tool install --python {PYTHON_VERSION} pipx"
+#     cleanup: str = "uv tool uninstall pipx"
+#     create_venv: str = "true"
+#     install_tool: str = "uvx pipx install pip-tools"
+#     uninstall_tool: str = "uvx pipx uninstall pip-tools"
+#     clean_lock: str = "rm -rf requirements.lock"
+#     pkg_file: str = "requirements.lock"
+#     lock_file: str = "requirements.lock"
+#     import_dependency: str = "pipenv install -r requirements.lock"
+#     envs: dict = {
+#         "PIP_TOOLS_CACHE_DIR": "/tmp/.cache/piptools",
+#     }
+#     # tool command
+#     lock: str = "pip-compile --generate-hashes --resolver=backtracking --output-file=requirements.lock requirements.txt"
+#     install: str = "pip-sync --python-executable=.venv/bin/python --pip-args '--no-deps' pip-tools/requirements.txt"
+#     update: str = "pipenv update"
+#     add: str = f"pipenv install {ADD_PACKAGE}"
+#     version: str = "pipenv --version | awk '{print $3}'"
+
+
 def command_factory(tool: str, method: str, cache: bool) -> CMD:
     if tool == "poetry":
         tool = Poetry()
@@ -205,6 +288,10 @@ def command_factory(tool: str, method: str, cache: bool) -> CMD:
         tool = Pdm()
     elif tool == "pipenv":
         tool = Pipenv()
+    elif tool == "uv-pip":
+        tool = UvPip()
+    elif tool == "pip":
+        tool = Pip()
 
     cmder = ModernBenchmarkCMD(tool)
 
@@ -233,13 +320,17 @@ def env_factory(tool: str) -> dict:
         tool = Pdm()
     elif tool == "pipenv":
         tool = Pipenv()
+    elif tool == "uv-pip":
+        tool = UvPip()
+    elif tool == "pip":
+        tool = Pip()
     return tool.envs
 
 
 class Args(BaseModel):
     """Script argument."""
 
-    tool: Literal["uv", "poetry", "pdm", "pipenv"]
+    tool: Literal["uv", "poetry", "pdm", "pipenv", "uv-pip", "pip"]
     method: Literal["introduce", "lock", "install", "update", "add"]
     num_iter: int = 5
     output_file: str = "stats.csv"
@@ -278,7 +369,7 @@ def cli(args: Args) -> None:
                 [item for item in envs["PATH"].split(":") if "/archive-v0/" not in item]
             )
         envs |= tool_envs
-
+        print(envs)
         subprocess.run(
             [
                 "hyperfine",
