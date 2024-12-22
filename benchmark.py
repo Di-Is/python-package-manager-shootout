@@ -178,32 +178,6 @@ class Pdm:
     version: str = "pdm --version | awk '{print $3}'"
 
 
-class Pipenv:
-    name: str = "pipenv"
-    clean_cache: str = "rm -rf /tmp/.cache/pipenv"
-    clean_introduce_cache: str = "rm -rf ~/.local/pipx"
-    clean_venv: str = "rm -rf .venv"
-    setup: str = f"uv tool install --python {PYTHON_VERSION} pipx"
-    cleanup: str = "uv tool uninstall pipx"
-    install_tool: str = "uvx pipx install pipenv"
-    uninstall_tool: str = "uvx pipx uninstall pipenv"
-    clean_lock: str = "rm -rf Pipfile.lock"
-    create_venv: str = "true"
-    pkg_file: str = "Pipfile"
-    lock_file: str = "Pipfile.lock"
-    import_dependency: str = "pipenv install -r requirements.txt"
-    envs: dict = {
-        "PIPENV_VENV_IN_PROJECT": "true",
-        "PIPENV_CACHE_DIR": "/tmp/.cache/pipenv",
-    }
-    # tool command
-    lock: str = "pipenv lock"
-    install: str = "pipenv sync"
-    update: str = "pipenv update"
-    add: str = f"pipenv install {ADD_PACKAGE}"
-    version: str = "pipenv --version | awk '{print $3}'"
-
-
 class UvPip:
     name: str = "uv-pip"
     clean_introduce_cache: str = "true"
@@ -252,31 +226,6 @@ class Pip:
     version: str = ".venv/bin/pip --version | awk '{print $2}'"
 
 
-# class Piptools:
-#     name: str = "pip-tools"
-#     clean_cache: str = "rm -rf /tmp/.cache/piptools"
-#     clean_introduce_cache: str = "rm -rf ~/.local/pipx"
-#     clean_venv: str = "rm -rf .venv"
-#     setup: str = f"uv tool install --python {PYTHON_VERSION} pipx"
-#     cleanup: str = "uv tool uninstall pipx"
-#     create_venv: str = "true"
-#     install_tool: str = "uvx pipx install pip-tools"
-#     uninstall_tool: str = "uvx pipx uninstall pip-tools"
-#     clean_lock: str = "rm -rf requirements.lock"
-#     pkg_file: str = "requirements.lock"
-#     lock_file: str = "requirements.lock"
-#     import_dependency: str = "pipenv install -r requirements.lock"
-#     envs: dict = {
-#         "PIP_TOOLS_CACHE_DIR": "/tmp/.cache/piptools",
-#     }
-#     # tool command
-#     lock: str = "pip-compile --generate-hashes --resolver=backtracking --output-file=requirements.lock requirements.txt"
-#     install: str = "pip-sync --python-executable=.venv/bin/python --pip-args '--no-deps' pip-tools/requirements.txt"
-#     update: str = "pipenv update"
-#     add: str = f"pipenv install {ADD_PACKAGE}"
-#     version: str = "pipenv --version | awk '{print $3}'"
-
-
 def command_factory(tool: str, method: str, cache: bool) -> CMD:
     if tool == "poetry":
         tool = Poetry()
@@ -284,8 +233,6 @@ def command_factory(tool: str, method: str, cache: bool) -> CMD:
         tool = Uv()
     elif tool == "pdm":
         tool = Pdm()
-    elif tool == "pipenv":
-        tool = Pipenv()
     elif tool == "uv-pip":
         tool = UvPip()
     elif tool == "pip":
@@ -316,8 +263,6 @@ def env_factory(tool: str) -> dict:
         tool = Uv()
     elif tool == "pdm":
         tool = Pdm()
-    elif tool == "pipenv":
-        tool = Pipenv()
     elif tool == "uv-pip":
         tool = UvPip()
     elif tool == "pip":
@@ -328,7 +273,7 @@ def env_factory(tool: str) -> dict:
 class Args(BaseModel):
     """Script argument."""
 
-    tool: Literal["uv", "poetry", "pdm", "pipenv", "uv-pip", "pip"]
+    tool: Literal["uv", "poetry", "pdm", "uv-pip", "pip"]
     method: Literal["introduce", "lock", "install", "update", "add"]
     num_iter: int = 5
     output_file: str = "stats.csv"
