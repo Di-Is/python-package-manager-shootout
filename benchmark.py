@@ -1,6 +1,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
+#     "click",
 #     "pydanclick",
 #     "pydantic",
 # ]
@@ -196,13 +197,14 @@ class Args(BaseModel):
     tool: Literal["uv", "poetry", "pdm"]
     method: Literal["introduce", "lock", "install", "update", "add"]
     num_iter: int = 5
+    output_file: str = "stats.csv"
     cache: bool
 
 
 @click.command()
 @from_pydantic(
     Args,
-    shorten={"tool": "-t", "method": "-m", "num_iter": "-n"},
+    shorten={"tool": "-t", "method": "-m", "num_iter": "-n", "output_file": "-o"},
 )
 def cli(args: Args) -> None:
     cmd = command_factory(args.tool, args.method, args.cache)
@@ -211,10 +213,10 @@ def cli(args: Args) -> None:
 
     with tempfile.TemporaryDirectory() as temp_dir:
         shutil.copy("requirements.txt", temp_dir)
-
-        if os.path.exists(args.tool):
-            for item in os.listdir(args.tool):
-                src_path = os.path.join(args.tool, item)
+        tool_dir = f"package/{args.tool}"
+        if os.path.exists(tool_dir):
+            for item in os.listdir(tool_dir):
+                src_path = os.path.join(tool_dir, item)
                 if os.path.isdir(src_path):
                     shutil.copytree(src_path, f"{temp_dir}/{item}")
                 else:
@@ -235,7 +237,7 @@ def cli(args: Args) -> None:
                 "hyperfine",
                 "--show-output",
                 "--export-csv",
-                "stats.csv",
+                args.output_file,
                 "--runs",
                 f"{args.num_iter}",
                 "--setup",

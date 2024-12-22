@@ -5,6 +5,9 @@ name: benchmark
 on:
   push:
 
+env:
+  NUM_ITER: 5
+
 jobs:
   modern-benchmark:
     runs-on: ubuntu-22.04
@@ -35,7 +38,7 @@ jobs:
 
       - name: benchmark
         run: |
-          uv run benchmark.py --tool ${{ matrix.tool }} --method ${{ matrix.method }} --${{ matrix.cache }} -n 1
+          uv run benchmark.py -t ${{ matrix.tool }} -m ${{ matrix.method }} --${{ matrix.cache }} -n ${{ env.NUM_ITER }} -o stats.csv
           mkdir ${{ matrix.tool }}-${{ matrix.method }}-${{ matrix.cache }}
           mv stats.csv ${{ matrix.tool }}-${{ matrix.method }}-${{ matrix.cache }}
 
@@ -62,6 +65,7 @@ jobs:
           for FILE in $CSV_FILES; do
             tail -n +2 $FILE >> combined-stats.csv
           done
+          uv run script/custom_sort.py combined-stats.csv
 
       - name: install uv
         uses: astral-sh/setup-uv@v4
