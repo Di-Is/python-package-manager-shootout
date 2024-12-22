@@ -235,10 +235,8 @@ class Pip:
     clean_cache: str = "rm -rf .cache"
     clean_venv: str = "rm -rf .venv"
     clean_lock: str = "true"
-    install_tool: str = (
-        'curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="./bin/" sh'
-    )
-    uninstall_tool: str = "rm -r bin"
+    install_tool: str = "true"
+    uninstall_tool: str = "true"
     create_venv: str = "uv venv && uv pip install pip"
     setup: str = "true"
     cleanup: str = "true"
@@ -399,6 +397,7 @@ def cli(args: Args) -> None:
         # get version
         cmd = command_factory(args.tool, "version", args.cache)
         subprocess.run(cmd.setup, shell=True, cwd=temp_dir)
+        subprocess.run(cmd.prepare, shell=True, cwd=temp_dir)
         version = subprocess.run(
             cmd.target,
             capture_output=True,
@@ -406,7 +405,8 @@ def cli(args: Args) -> None:
             text=True,
             shell=True,
             check=True,
-        ).stdout.strip()
+        ).stderr.strip()
+        subprocess.run(cmd.conclude, shell=True, cwd=temp_dir)
         subprocess.run(cmd.cleanup, shell=True, cwd=temp_dir)
 
         with open(f"{temp_dir}/stats.csv", "r", encoding="utf-8") as src:
