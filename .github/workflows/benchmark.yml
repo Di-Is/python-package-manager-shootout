@@ -58,16 +58,16 @@ jobs:
         run: |
           CSV_FILES=$(ls artifacts/*/*.csv)
           HEADER=$(head -n 1 $(echo $CSV_FILES | awk '{print $1}'))
-          echo $HEADER > combined.csv
+          echo $HEADER > combined-stats.csv
           for FILE in $CSV_FILES; do
-            tail -n +2 $FILE >> combined.csv
+            tail -n +2 $FILE >> combined-stats.csv
           done
 
       - name: Read CSV
         id: csv
         uses: juliangruber/read-file-action@v1
         with:
-          path: ./combined.csv
+          path: ./combined-stats.csv
 
       - name: Create MD
         uses: petems/csv-to-md-table-action@master
@@ -81,5 +81,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: combined-stats
-          path: combined.csv
+          path: combined-stats.csv
           retention-days: 10
