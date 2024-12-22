@@ -80,6 +80,6 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: modern-benchmark-result
+          name: combined-stats
           path: combined.csv
           retention-days: 10
