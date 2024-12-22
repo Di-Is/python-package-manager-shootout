@@ -6,14 +6,14 @@ on:
   push:
 
 env:
-  NUM_ITER: 5
+  NUM_ITER: 1
 
 jobs:
   modern-benchmark:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        tool: ["uv", "poetry", "pdm"]
+        tool: ["uv", "poetry", "pdm", "pipenv"]
         method: ["introduce", "lock", "install", "update", "add"]
         cache: ["cache", "no-cache"]
         exclude:
