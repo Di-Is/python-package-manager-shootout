@@ -78,3 +78,8 @@ jobs:
       - name: output
         run: echo '${{steps.csv-table-output.outputs.markdown-table}}' >> $GITHUB_STEP_SUMMARY
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: modern-benchmark-result
+          path: combined.csv
+          retention-days: 10
