@@ -71,7 +71,7 @@ jobs:
           for FILE in $CSV_FILES; do
             tail -n +2 $FILE >> combined-stats.csv
           done
-          uv run script/custom_sort.py combined-stats.csv
+          uv run script/custom_sort.py -i combined-stats.csv
 
       - name: convert markdown
         run: uvx csv2md combined-stats.csv >> $GITHUB_STEP_SUMMARY
