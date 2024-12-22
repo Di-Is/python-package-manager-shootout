@@ -35,7 +35,7 @@ jobs:
 
       - name: benchmark
         run: |
-          uv run benchmark.py --tool ${{ matrix.tool }} --method ${{ matrix.method }} --${{ matrix.cache }}
+          uv run benchmark.py --tool ${{ matrix.tool }} --method ${{ matrix.method }} --${{ matrix.cache }} -n 1
           mkdir ${{ matrix.tool }}-${{ matrix.method }}-${{ matrix.cache }}
           mv stats.csv ${{ matrix.tool }}-${{ matrix.method }}-${{ matrix.cache }}
 
