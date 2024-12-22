@@ -108,7 +108,7 @@ class Uv:
     clean_introduce_cache: str = "true"
     clean_cache: str = "rm -rf .cache"
     clean_venv: str = "rm -rf .venv"
-    clean_lock: str = "rm uv.lock"
+    clean_lock: str = "rm -rf uv.lock"
     install_tool: str = (
         'curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="./bin/" sh'
     )
