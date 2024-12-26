@@ -6,7 +6,7 @@ on:
   push:
 
 env:
-  NUM_ITER: 1
+  NUM_ITER: 5
 
 jobs:
   modern-benchmark:
