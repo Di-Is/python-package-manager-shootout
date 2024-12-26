@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        tool: ["uv", "poetry", "pdm", "uv-pip", "pip"]
+        tool: ["uv", "poetry", "uv-pip", "pip"]
         method: ["introduce", "lock", "install", "update", "add"]
         cache: ["cache", "no-cache"]
         exclude:

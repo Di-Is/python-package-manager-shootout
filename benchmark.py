@@ -155,29 +155,6 @@ class Poetry:
     version: str = "poetry --version | awk '{print $3}' | tr -d ')'"
 
 
-class Pdm:
-    name: str = "pdm"
-    clean_cache: str = "rm -rf ~/.cache/pdm"
-    clean_introduce_cache: str = "rm -rf ~/.local/pipx"
-    clean_venv: str = "rm -rf .venv"
-    setup: str = f"uv tool install --python {PYTHON_VERSION} pipx"
-    cleanup: str = "uv tool uninstall pipx"
-    install_tool: str = "uvx pipx install pdm"
-    uninstall_tool: str = "uvx pipx uninstall pdm"
-    create_venv: str = "true"
-    clean_lock: str = "rm -rf pdm.lock"
-    lock_file: str = "pdm.lock"
-    pkg_file: str = "pyproject.toml"
-    import_dependency: str = "pdm import -f requirements requirements.txt"
-    envs = {}
-    # tool command
-    lock: str = "pdm lock"
-    install: str = "pdm install"
-    update: str = "pdm update"
-    add: str = f"pdm add {ADD_PACKAGE}"
-    version: str = "pdm --version | awk '{print $3}'"
-
-
 class UvPip:
     name: str = "uv-pip"
     clean_introduce_cache: str = "true"
@@ -231,8 +208,6 @@ def command_factory(tool: str, method: str, cache: bool) -> CMD:
         tool = Poetry()
     elif tool == "uv":
         tool = Uv()
-    elif tool == "pdm":
-        tool = Pdm()
     elif tool == "uv-pip":
         tool = UvPip()
     elif tool == "pip":
@@ -261,8 +236,6 @@ def env_factory(tool: str) -> dict:
         tool = Poetry()
     elif tool == "uv":
         tool = Uv()
-    elif tool == "pdm":
-        tool = Pdm()
     elif tool == "uv-pip":
         tool = UvPip()
     elif tool == "pip":
@@ -273,7 +246,7 @@ def env_factory(tool: str) -> dict:
 class Args(BaseModel):
     """Script argument."""
 
-    tool: Literal["uv", "poetry", "pdm", "uv-pip", "pip"]
+    tool: Literal["uv", "poetry", "uv-pip", "pip"]
     method: Literal["introduce", "lock", "install", "update", "add"]
     num_iter: int = 5
     output_file: str = "stats.csv"
