@@ -223,7 +223,7 @@ class Pip:
     install: str = ".venv/bin/pip install -r requirements.txt"
     update: str = "true"
     add: str = "true"
-    version: str = ".venv/bin/pip --version | awk '{print $2}'"
+    version: str = "uv run pip --version | awk '{print $2}'"
 
 
 def command_factory(tool: str, method: str, cache: bool) -> CMD:
