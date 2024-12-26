@@ -12,3 +12,8 @@ license = {text = "MIT"}
 [tool.uv]
 python-preference = "only-system"
 cache-dir = ".cache"
+preview = true
+
+[build-system]
+requires = ["uv<0.6"]
+build-backend = "uv"
