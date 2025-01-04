@@ -6,8 +6,6 @@ on:
   push:
     branches:
       - benchmark/*
-  schedule:
-    - cron: '50 */6 * * *'
 jobs:
 
   poetry:
