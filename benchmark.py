@@ -123,7 +123,7 @@ class Uv:
     lock_file: str = "uv.lock"
     pkg_file: str = "pyproject.toml"
     import_dependency: str = "bin/uv add --frozen -r requirements.txt"
-    envs = {}
+    envs = {"INSTALLER_NO_MODIFY_PATH": "1"}
     # tool command
     lock: str = "bin/uv lock"
     install: str = "bin/uv sync"
