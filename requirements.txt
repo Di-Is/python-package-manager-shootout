@@ -17,4 +17,4 @@ ragas
 rank-bm25
 requests
 streamlit
-tavily-python>
+tavily-python
