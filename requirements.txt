@@ -1,7 +1,6 @@
 gitpython
 jinja2
 langchain
-langchain-chroma
 langchain-cli
 langchain-cohere
 langchain-community
